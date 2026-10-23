@@ -1,0 +1,40 @@
+---
+import { getContent } from '../../lib/content';
+import { imageUrl } from '../../lib/content-model';
+import ContentCard from '../../components/ContentCard.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const { projetos } = await getContent();
+---
+
+<BaseLayout title="Projetos e ações">
+  <PageHeader
+    eyebrow="O que fazemos"
+    title="Projetos e ações"
+    description="Iniciativas que fortalecem mulheres e ampliam possibilidades nas comunidades."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        projetos.length ? (
+          <div class="card-grid">
+            {projetos.map((item) => (
+              <ContentCard
+                href={`/projetos/${item.slug}/`}
+                title={item.title}
+                description={item.description}
+                image={imageUrl(item.image, 640)}
+                imageAlt={item.image?.alt}
+                kind="Projeto"
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="empty-state">Nenhum projeto publicado no momento.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

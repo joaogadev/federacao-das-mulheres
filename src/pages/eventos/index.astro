@@ -1,0 +1,32 @@
+---
+import { getContent } from '../../lib/content';
+import EventListItem from '../../components/EventListItem.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const { eventos } = await getContent();
+---
+
+<BaseLayout title="Eventos">
+  <PageHeader
+    eyebrow="Participe"
+    title="Eventos"
+    description="Encontros, oficinas e atividades abertas à comunidade."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        eventos.length ? (
+          <div class="list-stack">
+            {eventos.map((event) => (
+              <EventListItem event={event} showDescription />
+            ))}
+          </div>
+        ) : (
+          <p class="empty-state">Nenhum evento publicado no momento.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

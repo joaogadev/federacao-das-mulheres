@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+---
+
+<BaseLayout title="Página não encontrada" noindex>
+  <PageHeader
+    eyebrow="Página não encontrada"
+    title="Este conteúdo não está disponível"
+    description="O endereço pode ter mudado ou a publicação pode ter sido retirada."
+  />
+  <section class="section">
+    <div class="container narrow">
+      <a class="button" href="/">Voltar para o início</a>
+    </div>
+  </section>
+</BaseLayout>

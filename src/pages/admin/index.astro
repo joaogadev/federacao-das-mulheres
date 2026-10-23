@@ -1,0 +1,36 @@
+---
+import { getStudioUrl } from '../../lib/content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+const studioUrl = getStudioUrl();
+---
+
+<BaseLayout title="Painel editorial" noindex>
+  <PageHeader
+    eyebrow="Conteúdo institucional"
+    title="Painel editorial"
+    description="Espaço das responsáveis pela atualização do site."
+  />
+  <section class="section">
+    <div class="container narrow">
+      {
+        studioUrl ? (
+          <>
+            <p>
+              Acesse o painel e entre com sua conta individual para atualizar os
+              conteúdos da Federação.
+            </p>
+            <a class="button" href={studioUrl} rel="noopener noreferrer">
+              Acessar o Sanity Studio ↗
+            </a>
+          </>
+        ) : (
+          <p>
+            O painel editorial ainda não está disponível. Entre em contato com a
+            pessoa responsável pelo site.
+          </p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

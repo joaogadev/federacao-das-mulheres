@@ -1,0 +1,43 @@
+---
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { getSite } from '../lib/content';
+const site = await getSite();
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const { title, description = site.intro, noindex = false } = Astro.props;
+const pageTitle = title
+  ? `${title} | ${site.name}`
+  : `${site.name} | Autonomia e participação`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    {
+      (noindex || process.env.CONTENT_SOURCE === 'demo') && (
+        <meta name="robots" content="noindex, nofollow" />
+      )
+    }
+    <meta name="theme-color" content="#693f55" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+    <SiteHeader currentPath={Astro.url.pathname} />
+    <main id="conteudo"><slot /></main>
+    <SiteFooter />
+  </body>
+</html>

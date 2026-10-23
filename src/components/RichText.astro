@@ -1,0 +1,10 @@
+---
+import type { Body } from '../lib/content-model';
+import { renderBody } from '../lib/rich-text';
+interface Props {
+  body: Body;
+}
+const { body } = Astro.props;
+---
+
+<Fragment set:html={renderBody(body)} />

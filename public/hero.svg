@@ -1,0 +1,28 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 500 500"
+  role="img"
+  aria-labelledby="title"
+>
+  <title id="title">Ilustração abstrata de mulheres reunidas</title>
+  <circle cx="250" cy="250" r="220" fill="#dfbcc1" />
+  <circle cx="250" cy="250" r="192" fill="#f8efea" />
+  <path
+    d="M70 405c25-91 83-126 146-126 48 0 91 26 115 78 24-33 61-51 103-52 19 34 32 68 38 100z"
+    fill="#a36b7c"
+  />
+  <circle cx="191" cy="200" r="64" fill="#d59c8d" />
+  <path
+    d="M132 197c-13-72 33-100 76-91 53 12 58 57 45 112-6-43-26-67-57-72-23 31-43 41-64 51z"
+    fill="#493445"
+  />
+  <circle cx="344" cy="212" r="54" fill="#c98b7d" />
+  <path
+    d="M289 214c-2-68 29-101 76-91 42 10 55 59 34 100-8-41-25-62-51-64-11 21-32 40-59 55z"
+    fill="#67404d"
+  />
+  <path d="M256 372c-1-47 32-80 82-83 50-3 85 30 97 83z" fill="#694052" />
+  <path d="M94 405c10-75 50-108 103-108 55 0 98 32 111 108z" fill="#6b455b" />
+  <path d="M203 293l-13 37 31 33 28-34-18-39" fill="#d59c8d" />
+  <path d="M349 285l-11 35 27 24 24-29-15-34" fill="#c98b7d" />
+</svg>

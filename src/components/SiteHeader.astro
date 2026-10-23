@@ -1,0 +1,48 @@
+---
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+const navigation = [
+  { label: 'Início', href: '/' },
+  { label: 'Sobre', href: '/sobre/' },
+  { label: 'Notícias', href: '/noticias/' },
+  { label: 'Eventos', href: '/eventos/' },
+  { label: 'Projetos', href: '/projetos/' },
+  { label: 'Depoimentos', href: '/depoimentos/' },
+  { label: 'Contato', href: '/contato/' },
+];
+---
+
+<div class="topline">
+  <div class="container">
+    Uma rede de mulheres, por mulheres e para mulheres
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Federação das Mulheres — início">
+      <span class="brand-mark" aria-hidden="true">✳</span>
+      <span>
+        <strong>Federação</strong>
+        <small>das Mulheres</small>
+      </span>
+    </a>
+
+    <nav class="main-nav" aria-label="Navegação principal">
+      {
+        navigation.map(({ href, label }) => (
+          <a
+            href={href}
+            aria-current={currentPath === href ? 'page' : undefined}
+          >
+            {label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>
