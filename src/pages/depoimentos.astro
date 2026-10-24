@@ -1,0 +1,43 @@
+---
+import { getContent } from '../lib/content';
+import RichText from '../components/RichText.astro';
+import PageHeader from '../components/PageHeader.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const { depoimentos } = await getContent();
+---
+
+<BaseLayout title="Depoimentos">
+  <PageHeader
+    eyebrow="Vozes da comunidade"
+    title="Depoimentos"
+    description="Relatos de mulheres que participam das nossas atividades."
+  />
+
+  <section class="section section-soft">
+    <div class="container">
+      {
+        depoimentos.length ? (
+          <div class="quote-grid">
+            {depoimentos.map((entry) => (
+              <article class="quote-card">
+                <span class="quote-mark" aria-hidden="true">
+                  “
+                </span>
+                <blockquote>
+                  <RichText body={entry.body} />
+                </blockquote>
+                <cite>
+                  {entry.name}
+                  <span>{entry.role}</span>
+                </cite>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p class="empty-state">Nenhum depoimento publicado no momento.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

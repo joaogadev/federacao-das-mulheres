@@ -1,0 +1,45 @@
+{
+  "name": "federacao-das-mulheres",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "dev:demo": "node scripts/demo.mjs dev",
+    "build:demo": "node scripts/demo.mjs build",
+    "test": "tsx --test tests/*.test.ts",
+    "migrate:prepare": "node scripts/migrate.mjs",
+    "migrate:import": "node --env-file=.env scripts/migrate.mjs --import",
+    "migrate:verify": "node --env-file=.env scripts/migrate.mjs --verify",
+    "studio:dev": "npm --prefix studio run dev",
+    "studio:build": "npm --prefix studio run build",
+    "studio:check": "npm --prefix studio run check",
+    "studio:deploy": "npm --prefix studio run deploy",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@sanity/client": "^7.0.0",
+    "@portabletext/to-html": "^3.0.0",
+    "zod": "^3.25.0",
+    "astro": "^5.16.0"
+  },
+  "devDependencies": {
+    "groq-js": "^1.0.0",
+    "@types/node": "^22.0.0",
+    "gray-matter": "^4.0.3",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.0",
+    "tsx": "^4.0.0",
+    "@astrojs/check": "^0.9.5",
+    "prettier": "^3.9.0",
+    "prettier-plugin-astro": "^0.14.0",
+    "typescript": "^5.7.0"
+  }
+}

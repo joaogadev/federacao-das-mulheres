@@ -1,0 +1,40 @@
+---
+import type { Event } from '../lib/content-model';
+import { formatDate, formatShortMonth, parseDate } from '../lib/format';
+
+interface Props {
+  event: Event;
+  showDescription?: boolean;
+}
+
+const { event, showDescription = false } = Astro.props;
+const href = `/eventos/${event.slug}/`;
+const details = showDescription
+  ? `${formatDate(event.date)} · ${event.time} · ${event.location}`
+  : `${event.location} · ${event.time}`;
+---
+
+<article class="event-row">
+  <div class="date-tile">
+    <strong>{parseDate(event.date).getUTCDate()}</strong>
+    <span>{formatShortMonth(event.date)}</span>
+  </div>
+
+  <div>
+    {
+      showDescription ? (
+        <h2>
+          <a href={href}>{event.title}</a>
+        </h2>
+      ) : (
+        <h3>
+          <a href={href}>{event.title}</a>
+        </h3>
+      )
+    }
+    <p>{details}</p>
+    {showDescription && <p>{event.description}</p>}
+  </div>
+
+  <a class="text-link" href={href}>Detalhes →</a>
+</article>

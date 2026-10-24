@@ -1,0 +1,64 @@
+---
+import { getContent } from '../../lib/content';
+import { imageUrl, type Event } from '../../lib/content-model';
+import RichText from '../../components/RichText.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate } from '../../lib/format';
+
+export async function getStaticPaths() {
+  return (await getContent()).eventos.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+interface Props {
+  entry: Event;
+}
+const { entry } = Astro.props;
+---
+
+<BaseLayout title={entry.title} description={entry.description}>
+  <PageHeader
+    eyebrow="Evento"
+    title={entry.title}
+    description={entry.description}
+  />
+
+  <section class="section">
+    <div class="container article-layout">
+      <article>
+        {
+          entry.image && (
+            <img
+              class="article-image"
+              src={imageUrl(entry.image)}
+              alt={entry.image.alt}
+            />
+          )
+        }
+        <div class="prose"><RichText body={entry.body} /></div>
+      </article>
+
+      <aside class="article-aside">
+        <div class="detail-box">
+          <h2>Informações do evento</h2>
+          <dl>
+            <dt>Data</dt>
+            <dd>
+              <time datetime={entry.date}>
+                {formatDate(entry.date)}
+              </time>
+            </dd>
+            <dt>Horário</dt>
+            <dd>{entry.time}</dd>
+            <dt>Local</dt>
+            <dd>{entry.location}</dd>
+          </dl>
+        </div>
+        <a class="text-link" href="/eventos/">Voltar para eventos →</a>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>

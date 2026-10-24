@@ -1,0 +1,121 @@
+---
+import { getContent } from '../lib/content';
+import { imageUrl } from '../lib/content-model';
+import ContentCard from '../components/ContentCard.astro';
+import EventListItem from '../components/EventListItem.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatDate, upcomingEvents } from '../lib/format';
+
+const content = await getContent();
+const { site } = content;
+const noticias = content.noticias.slice(0, 3);
+const eventos = upcomingEvents(content.eventos).slice(0, 2);
+---
+
+<BaseLayout>
+  <section class="hero">
+    <div class="container hero-inner">
+      <div>
+        <p class="eyebrow">Bem-vinda à Federação das Mulheres</p>
+        <h1>{site.tagline}</h1>
+        <p class="lead">{site.intro}</p>
+        <div class="button-row">
+          <a class="button" href="/sobre/">Conheça a Federação</a>
+          <a class="button button-outline" href="/projetos/">Nossas ações</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <img
+          src="/hero.svg"
+          alt="Ilustração de mulheres reunidas"
+          width="500"
+          height="500"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container intro-grid">
+      <div class="intro-panel" aria-hidden="true">
+        <span class="symbol">✳</span>
+      </div>
+      <div class="intro-copy">
+        <p class="eyebrow">Quem somos</p>
+        <h2>Uma história construída em conjunto</h2>
+        <p>{site.homeMessage}</p>
+        <a class="text-link" href="/sobre/">
+          Conheça nossa trajetória <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-soft">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Acompanhe</p>
+          <h2>Últimas notícias</h2>
+          <p>Histórias, encontros e iniciativas da nossa rede.</p>
+        </div>
+        <a class="text-link" href="/noticias/">Ver todas as notícias →</a>
+      </div>
+
+      <div class="card-grid">
+        {
+          noticias.map((item) => (
+            <ContentCard
+              href={`/noticias/${item.slug}/`}
+              title={item.title}
+              description={item.description}
+              image={imageUrl(item.image, 640)}
+              imageAlt={item.image?.alt}
+              meta={formatDate(item.date)}
+              kind="Notícia"
+            />
+          ))
+        }
+      </div>
+      {
+        !noticias.length && (
+          <p class="empty-state">Nenhuma notícia publicada no momento.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Participe</p>
+          <h2>Próximos eventos</h2>
+          <p>Espaços de troca e aprendizado abertos à comunidade.</p>
+        </div>
+        <a class="text-link" href="/eventos/">Ver agenda completa →</a>
+      </div>
+
+      <div class="list-stack">
+        {eventos.map((event) => <EventListItem event={event} />)}
+        {
+          !eventos.length && (
+            <p class="empty-state">
+              Nenhum próximo evento publicado no momento.
+            </p>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container">
+      <div>
+        <p class="eyebrow">Faça parte</p>
+        <h2>Juntas, chegamos mais longe.</h2>
+      </div>
+      <a class="button" href="/contato/">Entre em contato</a>
+    </div>
+  </section>
+</BaseLayout>

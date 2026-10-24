@@ -1,0 +1,21 @@
+{
+  "name": "Federação das Mulheres",
+  "tagline": "Juntas, construímos caminhos de autonomia.",
+  "intro": "Uma rede de acolhimento, formação e mobilização que fortalece mulheres e suas comunidades.",
+  "homeMessage": "Acreditamos na força das mulheres para transformar realidades. Conectamos pessoas, iniciativas e oportunidades para ampliar direitos, autonomia e participação social.",
+  "history": "A Federação das Mulheres nasceu da união de lideranças comunitárias que buscavam ampliar o acesso à informação, ao apoio mútuo e a oportunidades para mulheres. Hoje, reúne ações de formação, diálogo e articulação com organizações parceiras.",
+  "mission": "Promover a autonomia das mulheres por meio do acolhimento, da educação e da participação coletiva.",
+  "vision": "Uma sociedade em que todas as mulheres possam exercer seus direitos e construir seus próprios caminhos com segurança e dignidade.",
+  "values": [
+    "Respeito à diversidade",
+    "Escuta e acolhimento",
+    "Transparência",
+    "Colaboração comunitária"
+  ],
+  "email": "contato@exemplo.org",
+  "phone": "(85) 0000-0000",
+  "address": "Fortaleza, Ceará",
+  "instagram": "https://www.instagram.com/",
+  "facebook": "https://www.facebook.com/",
+  "donationUrl": "https://www.example.org/doar"
+}

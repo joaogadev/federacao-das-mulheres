@@ -1,0 +1,61 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import { getSite } from '../lib/content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const site = await getSite();
+const phoneHref = `tel:${site.phone.replace(/[^\d+]/g, '')}`;
+---
+
+<BaseLayout title="Contato">
+  <PageHeader
+    eyebrow="Converse com a gente"
+    title="Contato"
+    description="Estamos à disposição para ouvir você e construir novas parcerias."
+  />
+
+  <section class="section">
+    <div class="container contact-grid">
+      <div class="contact-card">
+        <h2>Fale com a Federação</h2>
+        <p>
+          <strong>E-mail</strong><br />
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </p>
+        <p>
+          <strong>Telefone</strong><br />
+          <a href={phoneHref}>{site.phone}</a>
+        </p>
+        <p>
+          <strong>Localização</strong><br />
+          {site.address}
+        </p>
+      </div>
+
+      <div class="contact-card">
+        <h2>Acompanhe e apoie</h2>
+        <p>
+          Conheça nossas atividades nas redes sociais e apoie as iniciativas da
+          Federação.
+        </p>
+        <p>
+          <a href={site.instagram} target="_blank" rel="noopener noreferrer">
+            Instagram ↗
+          </a>
+          <br />
+          <a href={site.facebook} target="_blank" rel="noopener noreferrer">
+            Facebook ↗
+          </a>
+        </p>
+        <a
+          class="button"
+          href={site.donationUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Apoiar a Federação ↗
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

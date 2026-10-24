@@ -1,0 +1,57 @@
+---
+import { getContent } from '../../lib/content';
+import { imageUrl, type Content } from '../../lib/content-model';
+import RichText from '../../components/RichText.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate } from '../../lib/format';
+
+export async function getStaticPaths() {
+  return (await getContent()).noticias.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+interface Props {
+  entry: Content['noticias'][number];
+}
+const { entry } = Astro.props;
+---
+
+<BaseLayout title={entry.title} description={entry.description}>
+  <PageHeader
+    eyebrow="Notícia"
+    title={entry.title}
+    description={entry.description}
+  />
+
+  <section class="section">
+    <div class="container article-layout">
+      <article>
+        <p class="article-meta">
+          Publicado em
+          <time datetime={entry.date}>
+            {formatDate(entry.date)}
+          </time>
+        </p>
+        {
+          entry.image && (
+            <img
+              class="article-image"
+              src={imageUrl(entry.image)}
+              alt={entry.image.alt}
+            />
+          )
+        }
+        <div class="prose"><RichText body={entry.body} /></div>
+      </article>
+
+      <aside class="article-aside">
+        <h2>Continue explorando</h2>
+        <p>Conheça outras iniciativas e histórias da Federação.</p>
+        <a class="text-link" href="/noticias/">Todas as notícias →</a>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>

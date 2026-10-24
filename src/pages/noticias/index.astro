@@ -1,0 +1,42 @@
+---
+import { getContent } from '../../lib/content';
+import { imageUrl } from '../../lib/content-model';
+import ContentCard from '../../components/ContentCard.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate } from '../../lib/format';
+
+const { noticias } = await getContent();
+---
+
+<BaseLayout title="Notícias">
+  <PageHeader
+    eyebrow="Acompanhe"
+    title="Notícias"
+    description="Novidades, ações e histórias da Federação das Mulheres."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        noticias.length ? (
+          <div class="card-grid">
+            {noticias.map((item) => (
+              <ContentCard
+                href={`/noticias/${item.slug}/`}
+                title={item.title}
+                description={item.description}
+                image={imageUrl(item.image, 640)}
+                imageAlt={item.image?.alt}
+                meta={formatDate(item.date)}
+                kind="Notícia"
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="empty-state">Nenhuma notícia publicada no momento.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

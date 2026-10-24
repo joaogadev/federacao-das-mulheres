@@ -1,0 +1,51 @@
+---
+import { getContent } from '../../lib/content';
+import { imageUrl, type Content } from '../../lib/content-model';
+import RichText from '../../components/RichText.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  return (await getContent()).projetos.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+interface Props {
+  entry: Content['projetos'][number];
+}
+const { entry } = Astro.props;
+---
+
+<BaseLayout title={entry.title} description={entry.description}>
+  <PageHeader
+    eyebrow="Projeto"
+    title={entry.title}
+    description={entry.description}
+  />
+
+  <section class="section">
+    <div class="container article-layout">
+      <article>
+        {
+          entry.image && (
+            <img
+              class="article-image"
+              src={imageUrl(entry.image)}
+              alt={entry.image.alt}
+            />
+          )
+        }
+        <div class="prose"><RichText body={entry.body} /></div>
+      </article>
+
+      <aside class="article-aside">
+        <h2>Participe</h2>
+        <p>Entre em contato para saber mais sobre nossas ações.</p>
+        <a class="text-link" href="/contato/">Fale conosco →</a>
+        <p><a class="text-link" href="/projetos/">Todos os projetos →</a></p>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>

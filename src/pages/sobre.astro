@@ -1,0 +1,32 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import { getSite } from '../lib/content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+const site = await getSite();
+---
+
+<BaseLayout title="Sobre a Federação">
+  <PageHeader
+    eyebrow="Nossa história"
+    title="Sobre a Federação"
+    description="Conheça a trajetória e os princípios que orientam nosso trabalho."
+  />
+
+  <section class="section">
+    <div class="container prose">
+      <h2>Uma construção coletiva</h2>
+      <p>{site.history}</p>
+
+      <h2>Nossa missão</h2>
+      <p>{site.mission}</p>
+
+      <h2>Nossa visão</h2>
+      <p>{site.vision}</p>
+
+      <h2>Valores</h2>
+      <div class="values-grid">
+        {site.values.map((value) => <div class="value">{value}</div>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
