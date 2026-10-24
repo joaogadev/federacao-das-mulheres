@@ -118,13 +118,13 @@ npm run studio:deploy
 
 O deploy exige login e um projeto real. Escolha o hostname, registre o App ID quando fornecido e preencha `PUBLIC_SANITY_STUDIO_URL`. Atualizações automáticas do Studio estão habilitadas na configuração; mudanças nos schemas ainda exigem novo deploy técnico. Consulte a [documentação de hospedagem do Sanity](https://www.sanity.io/docs/studio/deployment).
 
-No Cloudflare Pages, conecte o repositório GitHub com branch de produção `main`, diretório raiz do projeto, comando **`npm run build`** e saída **`dist`**. Configure Node 22.14.0 e as quatro variáveis do frontend da tabela. Não use adaptador SSR, Workers, Functions ou `build:demo`. A instalação do frontend ocorre pelo lockfile da raiz; não instale o Studio no build do Pages.
+No Cloudflare Pages, conecte o repositório GitHub à branch que contém este código, diretório raiz do projeto, comando **`npm run build`** e saída **`dist`**. Configure Node 22.14.0 e as quatro variáveis do frontend da tabela. Não use adaptador SSR, Workers, Functions ou `build:demo`. A instalação do frontend ocorre pelo lockfile da raiz; não instale o Studio no build do Pages.
 
 As etapas completas, filtro do webhook, tratamento de falhas e checklist de entrega estão em [PRODUCAO.md](PRODUCAO.md).
 
 ## Publicação automática
 
-Crie um Deploy Hook do Cloudflare para a branch `main`. Cadastre a URL secreta como webhook POST no Sanity, limitado ao dataset `production`, aos cinco tipos de documentos e aos eventos Create, Update e Delete. Deixe eventos de drafts/versions desativados.
+Crie um Deploy Hook do Cloudflare para a mesma branch de produção. Cadastre a URL secreta como webhook POST no Sanity, limitado ao dataset `production`, aos cinco tipos de documentos e aos eventos Create, Update e Delete. Deixe eventos de drafts/versions desativados.
 
 Publicar, atualizar, despublicar ou excluir um documento aciona um novo build. Salvar rascunhos não deve acionar o hook. As alterações aparecem após a conclusão da implantação; não são instantâneas. Consulte o filtro copiável em [PRODUCAO.md](PRODUCAO.md) e a [integração oficial do Cloudflare com Sanity](https://developers.cloudflare.com/pages/configuration/deploy-hooks/).
 
@@ -191,3 +191,14 @@ A lista de próximos eventos reflete a data do **último build**. Sem publicaç�
 - `studio/`: schemas, interface editorial, configuração e lockfile próprios.
 - `migration/`, `scripts/`: acervo, preparação/importação e demonstração.
 - `tests/`: verificações da integração.
+
+## Quando uma publicação não aparece no site
+
+1. No Studio, confira se clicou em **Publicar**. Salvar um rascunho não altera o site público.
+2. Na raiz, execute `npm run diagnose:content` (com `.env` configurado). O comando lista IDs e tipos visíveis publicamente e, se houver token local, também os rascunhos. Não imprime o token nem a URL secreta do webhook. Em Windows com erro de certificado, use `$env:NODE_OPTIONS='--use-system-ca'` antes do comando.
+   Se um item criado no Studio não aparecer nem entre os rascunhos, confira o Project ID e o dataset do Studio hospedado; publicar uma nova versão do Studio pode ser necessário se ele ainda usa uma configuração antiga.
+3. Execute `npm run build` e confira as rotas geradas. A leitura acontece no build; visitantes não consultam o Sanity em tempo real.
+4. No Cloudflare Pages, confirme que o build usa `npm run build`, saída `dist`, dataset e Project ID corretos, e a **branch que contém este código**. O trabalho atual está em `joaoGabriel`; a `main` local ainda contém somente o commit inicial. Se o Cloudflare acompanha `main`, altere a branch de produção ou integre o código nela antes de esperar atualizações.
+5. No Sanity Manage → API → Webhooks, confira se o webhook POST para o Deploy Hook do Cloudflare está ativo para `production` e consulte o histórico de tentativas. Depois confirme no Cloudflare se um novo deploy terminou com sucesso. Alterar só o `.env` local não altera as variáveis do Cloudflare.
+
+Os exemplos do modo `dev:demo`/`build:demo` vêm de `migration/legacy/` e não são editáveis no Studio até serem importados. `npm run migrate:import` cria rascunhos sem sobrescrever documentos existentes; revise o conteúdo fictício antes de publicar. `npm run migrate:verify-drafts` confere os 11 rascunhos caso a página institucional já tenha sido personalizada.
