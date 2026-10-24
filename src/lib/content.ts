@@ -50,6 +50,9 @@ async function loadContent(): Promise<Content> {
     throw new Error(
       `Conteúdo publicado inválido ou documento institucional ausente: ${parsed.error.message}`,
     );
+  console.info(
+    `Sanity (${dataset}): ${parsed.data.noticias.length} notícias, ${parsed.data.eventos.length} eventos, ${parsed.data.projetos.length} projetos e ${parsed.data.depoimentos.length} depoimentos publicados.`,
+  );
   return parsed.data;
 }
 

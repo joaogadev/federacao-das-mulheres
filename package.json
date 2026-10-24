@@ -15,6 +15,7 @@
     "migrate:import": "node --env-file=.env scripts/migrate.mjs --import",
     "migrate:verify": "node --env-file=.env scripts/migrate.mjs --verify",
     "migrate:verify-drafts": "node --env-file=.env scripts/migrate.mjs --verify-drafts",
+    "diagnose:content": "node --env-file=.env scripts/diagnose-sanity.mjs",
     "studio:dev": "npm --prefix studio run dev",
     "studio:build": "npm --prefix studio run build",
     "studio:check": "npm --prefix studio run check",
