@@ -4,8 +4,8 @@ import { createClient } from '@sanity/client';
 import { readLegacy } from './legacy.mjs';
 
 const mode = process.argv[2];
-if (mode && !['--import', '--verify'].includes(mode))
-  throw new Error('Use sem argumentos, --import ou --verify.');
+if (mode && !['--import', '--verify', '--verify-drafts'].includes(mode))
+  throw new Error('Use sem argumentos, --import, --verify ou --verify-drafts.');
 const { documents, manifest } = await readLegacy();
 await mkdir('migration/output', { recursive: true });
 await writeFile(
@@ -58,6 +58,21 @@ if (mode) {
             remote._id === doc._id || remote._id === `drafts.${doc._id}`,
         ),
     );
+    const oldIds = pending
+      .filter((doc) => doc._id !== 'institucional')
+      .flatMap((doc) => {
+        const oldId = doc._id.replace(`${doc._type}-`, `${doc._type}.`);
+        return [oldId, `drafts.${oldId}`];
+      });
+    if (oldIds.length) {
+      const oldDocuments = await client.fetch('*[_id in $ids]{_id}', {
+        ids: oldIds,
+      });
+      if (oldDocuments.length)
+        throw new Error(
+          `Há ${oldDocuments.length} documentos da migração anterior com IDs pontuados. Revise-os manualmente antes de importar, para não duplicar conteúdo ou perder edições.`,
+        );
+    }
     if (pending.length) {
       let transaction = client.transaction();
       for (const doc of pending)
@@ -68,14 +83,20 @@ if (mode) {
       await transaction.commit();
     }
     console.log(
-      `${pending.length} rascunhos criados; ${documents.length - pending.length} documentos existentes preservados. Execute npm run migrate:verify antes de editar.`,
+      `${pending.length} rascunhos criados; ${documents.length - pending.length} documentos existentes preservados. Execute npm run ${existing.some((doc) => doc._id === 'institucional') ? 'migrate:verify-drafts' : 'migrate:verify'} antes de editar.`,
     );
   } else {
     const failures = [];
-    for (const doc of documents) {
+    const checkedDocuments =
+      mode === '--verify-drafts'
+        ? documents.filter((doc) => doc._id !== 'institucional')
+        : documents;
+    for (const doc of checkedDocuments) {
+      const draft = existing.find((item) => item._id === `drafts.${doc._id}`);
       const remote =
-        existing.find((item) => item._id === `drafts.${doc._id}`) ??
-        existing.find((item) => item._id === doc._id);
+        mode === '--verify-drafts'
+          ? draft
+          : (draft ?? existing.find((item) => item._id === doc._id));
       if (!remote) {
         failures.push(`${doc._id}: ausente`);
         continue;
@@ -90,7 +111,7 @@ if (mode) {
         `Migração não conferida:\n${failures.join('\n')}\nNenhum original foi removido.`,
       );
     console.log(
-      'Conferência concluída: todos os campos dos 12 documentos correspondem aos originais.',
+      `Conferência concluída: todos os campos de ${checkedDocuments.length} documentos correspondem aos originais.`,
     );
   }
 }
