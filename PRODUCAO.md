@@ -20,18 +20,18 @@ O Studio não expõe tokens. Os campos institucionais são agrupados e há uma e
 
 Use **Pages com integração Git**, não Direct Upload, pois o Deploy Hook precisa de um projeto ligado ao repositório.
 
-| Configuração               | Valor                                                |
-| -------------------------- | ---------------------------------------------------- |
-| Repositório                | Repositório GitHub deste código                      |
-| Branch de produção         | `main` (ou a branch efetiva, igual à do Deploy Hook) |
-| Diretório raiz             | Raiz do repositório                                  |
-| Comando de build           | `npm run build`                                      |
-| Diretório de saída         | `dist`                                               |
-| `NODE_VERSION`             | `22.14.0`                                            |
-| `SANITY_PROJECT_ID`        | ID real do projeto                                   |
-| `SANITY_DATASET`           | `production`                                         |
-| `SITE_URL`                 | URL HTTPS canônica do site                           |
-| `PUBLIC_SANITY_STUDIO_URL` | URL HTTPS do Studio                                  |
+| Configuração               | Valor                                                   |
+| -------------------------- | ------------------------------------------------------- |
+| Repositório                | Repositório GitHub deste código                         |
+| Branch de produção         | A branch que contém este código, igual à do Deploy Hook |
+| Diretório raiz             | Raiz do repositório                                     |
+| Comando de build           | `npm run build`                                         |
+| Diretório de saída         | `dist`                                                  |
+| `NODE_VERSION`             | `22.14.0`                                               |
+| `SANITY_PROJECT_ID`        | ID real do projeto                                      |
+| `SANITY_DATASET`           | `production`                                            |
+| `SITE_URL`                 | URL HTTPS canônica do site                              |
+| `PUBLIC_SANITY_STUDIO_URL` | URL HTTPS do Studio                                     |
 
 Não configure token Sanity no build. Não defina `CONTENT_SOURCE=demo`; o código bloqueia esse modo no Cloudflare. Use um dataset separado para previews de código se necessário; no Free ambos os datasets devem conter apenas informações públicas. As variáveis de preview e produção são configuradas separadamente no painel.
 
@@ -41,12 +41,20 @@ O código não retorna conteúdo antigo, vazio ou demonstrativo em caso de falha
 
 Após cadastrar um domínio próprio, altere `SITE_URL` e gere um novo build. Registro/renovação de domínio é um custo separado. A URL gratuita `*.pages.dev` é suficiente.
 
+### Se o endereço publicado termina em `workers.dev`
+
+Esse endereço pertence a um **Worker**, não a um projeto Pages. O site ainda pode ser gerado estaticamente, mas as configurações de build e o Deploy Hook são diferentes. No Worker conectado ao repositório, confirme que o comando de build é `npm run build`, que o comando de deploy publica os arquivos de `dist` como static assets e que a branch de produção contém esta integração Astro/Sanity. Cadastre `SITE_URL`, `SANITY_PROJECT_ID`, `SANITY_DATASET` e `PUBLIC_SANITY_STUDIO_URL` em **Settings → Build → Build variables and secrets**, não apenas em **Settings → Variables & Secrets** (variáveis de runtime). Consulte [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/). Não inclua o token de escrita do Sanity.
+
+Para manter a arquitetura originalmente prevista, crie um projeto **Pages com integração Git** e use o respectivo endereço `*.pages.dev`; não tente tratar o endereço `*.workers.dev` como se fosse de Pages.
+
 ## 3. Webhook de publicação
 
 No Cloudflare Pages → projeto → Settings → Builds & deployments → Deploy hooks:
 
 1. Crie um hook `sanity-publicacoes` para a branch de produção.
 2. Copie a URL gerada diretamente para o webhook do Sanity. **A URL é um segredo que permite iniciar builds**. Não a coloque no código, README, frontend ou GitHub.
+
+Se estiver usando **Workers Builds** em vez de Pages, crie o Deploy Hook em **Worker → Settings → Builds → Deploy Hooks**, para a mesma branch de produção. O Worker precisa estar conectado ao Git. O Sanity enviará um `POST` a essa URL, tal como no Pages. Consulte [Deploy Hooks de Workers](https://developers.cloudflare.com/workers/ci-cd/builds/deploy-hooks/). Não coloque a URL secreta em variáveis públicas do Astro nem no repositório.
 
 No Sanity Manage → projeto → API → Webhooks:
 
@@ -96,7 +104,11 @@ Não simule esse aceite apenas com a demonstração local: ela valida o código 
 
 ## 5. Operação e recuperação
 
-A mudança aparece somente depois do build. Se não aparecer, confira publicação no Studio, logs do webhook, branch/dataset configurados e o resultado do build no Pages.
+A mudança aparece somente depois do build. Se não aparecer, confira publicação no Studio, logs do webhook, branch/dataset configurados e o resultado do build no Pages ou Worker usado em produção.
+
+`drafts.*` não entra no site; no Studio é preciso clicar em **Publicar**, não apenas salvar. Se uma publicação aparece na leitura pública, mas não no site, confira **Sanity Manage → API → Webhooks → Attempts** e o histórico de builds/deploys do projeto Cloudflare. O log de build agora informa as quantidades de notícias, eventos, projetos e depoimentos lidos do Sanity; compare-as com o site. Se nenhum build iniciar após publicar, configure o Deploy Hook acima. Se o build ocorrer em outra branch ou projeto, corrija o destino do hook. Um deploy ativo anterior continua exibindo o conteúdo antigo até um novo deploy bem-sucedido.
+
+Use `npm run diagnose:content` para comparar os documentos publicados com os rascunhos. Confirme que a branch de produção do Pages contém a migração Astro/Sanity: neste checkout, ela está em `joaoGabriel`, enquanto `main` local ainda aponta para o commit inicial. Confira também o comando `npm run build`, a saída `dist` e as variáveis de ambiente cadastradas no próprio Cloudflare. Se o domínio de `SITE_URL` ainda não resolver no DNS, use provisoriamente o endereço real `*.pages.dev` do projeto até configurar o domínio próprio. Após corrigir, inicie um novo deploy e confira o HTML publicado.
 
 Uma falha conserva o HTML publicado anteriormente, inclusive conteúdo que se tentou excluir. Para uma remoção urgente, corrija o build e confirme o deploy; excluir no CMS sozinho não retira o HTML já hospedado. Assets são públicos e têm caches próprios, portanto nunca envie material confidencial.
 

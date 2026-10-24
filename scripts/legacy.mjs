@@ -134,7 +134,8 @@ export async function readLegacy() {
       const slug = file.slice(0, -3);
       documents.push({
         ...data,
-        _id: `${type}.${slug}`,
+        // Published IDs with dots cannot be read through the public API.
+        _id: `${type}-${slug}`,
         _type: type,
         ...(type !== 'depoimento'
           ? { slug: { _type: 'slug', current: slug } }

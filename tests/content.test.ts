@@ -17,6 +17,7 @@ test('migração preserva os 12 documentos, campos institucionais e textos origi
   assert.equal(documents.length, 12);
   assert.equal(manifest.length, 12);
   assert.equal(new Set(documents.map((doc) => doc._id)).size, 12);
+  assert.ok(documents.every((doc) => !doc._id.includes('.')));
   const data = contentSchema.parse(demoContent(documents));
   assert.deepEqual(
     [
@@ -30,7 +31,7 @@ test('migração preserva os 12 documentos, campos institucionais e textos origi
   for (const entry of manifest.filter((item) => item.file.endsWith('.md'))) {
     const original = await readFile(`migration/legacy/${entry.file}`, 'utf8');
     const slug = entry.file.split('/').at(-1)!.replace('.md', '');
-    const document = documents.find((doc) => doc._id.endsWith(`.${slug}`))!;
+    const document = documents.find((doc) => doc._id.endsWith(`-${slug}`))!;
     const paragraphs = original
       .split('---')[2]
       .trim()
