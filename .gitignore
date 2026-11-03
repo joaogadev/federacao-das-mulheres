@@ -6,5 +6,12 @@ dist/
 !.env.example
 .sanity/
 .cache/
+.npm-cache/
 studio/.sanity/
 migration/output/
+sistema-2/**/node_modules/
+sistema-2/**/dist/
+sistema-2/**/tsconfig.tsbuildinfo
+sistema-2/**/.npm-cache/
+sistema-2/**/.env
+sistema-2/.local-pg/

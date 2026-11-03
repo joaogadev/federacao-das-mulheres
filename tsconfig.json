@@ -1,6 +1,13 @@
 {
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": { "allowJs": true },
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules", "studio", "migration", "scripts"]
+  "include": [".astro/types.d.ts", "src/**/*", "tests/**/*"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "studio",
+    "migration",
+    "scripts",
+    "sistema-2"
+  ]
 }

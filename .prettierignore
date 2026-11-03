@@ -10,3 +10,5 @@ studio/.sanity/
 .cache/
 migration/legacy/
 migration/output/
+sistema-2/
+.npm-cache/
