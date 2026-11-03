@@ -1,15 +1,25 @@
-# Federação das Mulheres — site institucional
+# Federação das Mulheres — site institucional e administrativo
 
-Site informativo em **Astro + TypeScript**, com conteúdo no **Sanity Content Lake**, painel editorial no **Sanity Studio** e hospedagem estática no **Cloudflare Pages**. GitHub guarda o código-fonte; as responsáveis editam pelo Studio com contas individuais, sem GitHub ou comandos.
+O repositório contém o site institucional Astro (Sistema 1) e uma implementação própria do painel administrativo React, API NestJS e PostgreSQL (Sistema 2) em `sistema-2/`. A conexão financeira passa pelos links hospedados, API e webhooks do Asaas. Veja o [índice da integração](docs/integracao/README.md), especialmente [execução local](docs/integracao/02-execucao-local.md) e [como substituir o Sistema 2](docs/integracao/05-substituir-sistema-2.md).
 
-Este é somente o Sistema 1. Não inclui cadastro de associadas, documentos privados, financeiro, autenticação própria, pagamentos ou banco de dados próprio.
+As páginas **Quero me afiliar** e **Faça uma doação** usam URLs públicas de links Asaas independentes. Sem link válido, mostram indisponibilidade. A combinação de Link de Pagamento recorrente com Pix ainda precisa de teste na conta Sandbox antes de ativar filiação. Nenhuma operação financeira real ou deploy foi feito nesta entrega.
+
+## Sistema 2 — início rápido
+
+Instale as dependências em `sistema-2/backend` e `sistema-2/frontend`, copie os `.env.example`, inicie o PostgreSQL pelo Compose, aplique `npm --prefix sistema-2/backend run db:migrate` e crie o administrador com `ADMIN_EMAIL`, `ADMIN_PASSWORD` e `npm --prefix sistema-2/backend run admin:create`. Os comandos completos para PowerShell e Bash estão no [roteiro local](docs/integracao/02-execucao-local.md). A API está em `localhost:3001` e o painel em `localhost:5173`.
+
+## Sistema 1 — site e edição
+
+Site informativo em **Astro + TypeScript**, com conteúdo no **Sanity Content Lake**, painel editorial no **Sanity Studio** e configuração de assets estáticos para **Cloudflare Workers**. GitHub guarda o código-fonte; as responsáveis editam pelo Studio com contas individuais, sem GitHub ou comandos.
+
+O site público continua estático e sem banco, autenticação administrativa ou dados privados no navegador. Essas responsabilidades pertencem ao Sistema 2 e ao Asaas.
 
 ## Arquitetura
 
 ```text
 Responsável → Sanity Studio → Content Lake (publicação)
                                   ↓ webhook POST
-GitHub (código) → Cloudflare Pages → Astro build → HTML estático
+GitHub (código) → Cloudflare Workers Builds → Astro build → HTML estático
                                       ↑
                         consulta somente conteúdo publicado
 ```
@@ -57,17 +67,21 @@ Não publique `dist/` gerado pela demonstração. O modo é bloqueado em CI e Cl
 5. Execute o Studio, entre pelo login do Sanity e preencha/publice **Informações da Federação**, ou faça a migração descrita abaixo.
 6. Execute o frontend e confira os conteúdos publicados.
 
-| Variável                   | Local                           | Finalidade                                                     |
-| -------------------------- | ------------------------------- | -------------------------------------------------------------- |
-| `SANITY_PROJECT_ID`        | `.env` e Cloudflare             | ID público do projeto                                          |
-| `SANITY_DATASET`           | `.env` e Cloudflare             | Dataset, normalmente `production`                              |
-| `SITE_URL`                 | `.env` e Cloudflare             | URL HTTPS definitiva, usada nos links canônicos                |
-| `PUBLIC_SANITY_STUDIO_URL` | `.env` e Cloudflare             | URL HTTPS do Studio hospedado                                  |
-| `SANITY_STUDIO_PROJECT_ID` | `studio/.env`                   | Mesmo projeto do frontend                                      |
-| `SANITY_STUDIO_DATASET`    | `studio/.env`                   | Mesmo dataset do frontend                                      |
-| `SANITY_STUDIO_HOSTNAME`   | `studio/.env`                   | Nome escolhido para o subdomínio do Studio                     |
-| `SANITY_STUDIO_APP_ID`     | `studio/.env`                   | ID público informado no primeiro deploy, opcional inicialmente |
-| `SANITY_API_WRITE_TOKEN`   | Somente `.env` local temporário | Importação e conferência inicial                               |
+| Variável                       | Local                           | Finalidade                                                     |
+| ------------------------------ | ------------------------------- | -------------------------------------------------------------- |
+| `SANITY_PROJECT_ID`            | `.env` e Cloudflare             | ID público do projeto                                          |
+| `SANITY_DATASET`               | `.env` e Cloudflare             | Dataset, normalmente `production`                              |
+| `SITE_URL`                     | `.env` e Cloudflare             | URL HTTPS definitiva, usada nos links canônicos                |
+| `PUBLIC_SANITY_STUDIO_URL`     | `.env` e Cloudflare             | URL HTTPS do Studio hospedado                                  |
+| `PUBLIC_ASAAS_AFFILIATION_URL` | `.env` e Cloudflare             | Link recorrente validado para filiação                         |
+| `PUBLIC_ASAAS_DONATION_URL`    | `.env` e Cloudflare             | Link avulso Pix para doação                                    |
+| `PUBLIC_PRIVACY_URL`           | `.env` e Cloudflare             | Política de privacidade publicada                              |
+| `PUBLIC_AFFILIATION_TERMS_URL` | `.env` e Cloudflare             | Termos de filiação publicados                                  |
+| `SANITY_STUDIO_PROJECT_ID`     | `studio/.env`                   | Mesmo projeto do frontend                                      |
+| `SANITY_STUDIO_DATASET`        | `studio/.env`                   | Mesmo dataset do frontend                                      |
+| `SANITY_STUDIO_HOSTNAME`       | `studio/.env`                   | Nome escolhido para o subdomínio do Studio                     |
+| `SANITY_STUDIO_APP_ID`         | `studio/.env`                   | ID público informado no primeiro deploy, opcional inicialmente |
+| `SANITY_API_WRITE_TOKEN`       | Somente `.env` local temporário | Importação e conferência inicial                               |
 
 O frontend não precisa de token de leitura. Nunca inclua tokens em variáveis `PUBLIC_*` ou `SANITY_STUDIO_*`, no Studio, em screenshots ou no Git. Não configure o token de importação no Cloudflare.
 
@@ -118,7 +132,7 @@ npm run studio:deploy
 
 O deploy exige login e um projeto real. Escolha o hostname, registre o App ID quando fornecido e preencha `PUBLIC_SANITY_STUDIO_URL`. Atualizações automáticas do Studio estão habilitadas na configuração; mudanças nos schemas ainda exigem novo deploy técnico. Consulte a [documentação de hospedagem do Sanity](https://www.sanity.io/docs/studio/deployment).
 
-No Cloudflare Pages, conecte o repositório GitHub à branch que contém este código, diretório raiz do projeto, comando **`npm run build`** e saída **`dist`**. Configure Node 22.14.0 e as quatro variáveis do frontend da tabela. Não use adaptador SSR, Workers, Functions ou `build:demo`. A instalação do frontend ocorre pelo lockfile da raiz; não instale o Studio no build do Pages.
+No Cloudflare Workers Builds, conecte o repositório à branch que contém este código. Use **`npm run build`** como build e **`npx wrangler@latest deploy`** como comando de publicação; `wrangler.jsonc` serve `dist` como assets estáticos, sem código SSR. Configure Node 22.14.0 e as variáveis públicas do frontend como variáveis de **build**. Não use `build:demo` em produção. A instalação do frontend ocorre pelo lockfile da raiz; não instale o Studio no build do Worker. Esta entrega não fez publicação.
 
 As etapas completas, filtro do webhook, tratamento de falhas e checklist de entrega estão em [PRODUCAO.md](PRODUCAO.md).
 
@@ -126,7 +140,7 @@ As etapas completas, filtro do webhook, tratamento de falhas e checklist de entr
 
 Crie um Deploy Hook do Cloudflare para a mesma branch de produção. Cadastre a URL secreta como webhook POST no Sanity, limitado ao dataset `production`, aos cinco tipos de documentos e aos eventos Create, Update e Delete. Deixe eventos de drafts/versions desativados.
 
-Publicar, atualizar, despublicar ou excluir um documento aciona um novo build. Salvar rascunhos não deve acionar o hook. As alterações aparecem após a conclusão da implantação; não são instantâneas. Consulte o filtro copiável em [PRODUCAO.md](PRODUCAO.md) e a [integração oficial do Cloudflare com Sanity](https://developers.cloudflare.com/pages/configuration/deploy-hooks/).
+Publicar, atualizar, despublicar ou excluir um documento aciona um novo build. Salvar rascunhos não deve acionar o hook. As alterações aparecem após a conclusão da implantação; não são instantâneas. Consulte o filtro copiável em [PRODUCAO.md](PRODUCAO.md) e os [Deploy Hooks do Workers](https://developers.cloudflare.com/workers/ci-cd/builds/deploy-hooks/).
 
 ## Responsáveis editoriais e uso cotidiano
 
@@ -164,19 +178,19 @@ npm run build
 npm run studio:build
 ```
 
-Os testes verificam preservação do acervo, consulta GROQ com rascunhos/versões, imagens, validações, renderização segura e datas. A verificação do build de demonstração confere 17 páginas (incluindo a 404), metadados, assets e links internos. Login, importação remota e webhook requerem aceite com contas reais; não são simulados como concluídos.
+Os testes do Sistema 1 verificam preservação do acervo, consulta GROQ com rascunhos/versões, imagens, validações, renderização segura e datas. A verificação do build de demonstração confere 21 páginas (incluindo a 404), metadados, assets e links internos. Login, importação remota e webhook requerem aceite com contas reais; não são simulados como concluídos.
 
 ## Limites, custos e manutenção
 
-Conferido em 23/10/2026; os serviços podem alterar os planos.
+Conferido novamente em 30/10/2026 na página oficial de preços; os serviços podem alterar os planos.
 
-| Serviço Free      | Limites relevantes                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------ |
-| Sanity            | Até 20 assentos, papéis Administrator/Viewer, 2 datasets públicos, 10 mil documentos e 2 webhooks      |
-| Sanity uso mensal | 250 mil requisições API, 1 milhão via API CDN e 100 GB de transferência; 100 GB de assets              |
-| Cloudflare Pages  | 500 builds/mês, 1 build simultâneo, duração máxima de 20 minutos, 20 mil arquivos e 25 MiB por arquivo |
+| Serviço Free       | Limites relevantes                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| Sanity             | Até 20 assentos, papéis Administrator/Viewer, 2 datasets públicos, 10 mil documentos e 2 webhooks |
+| Sanity uso mensal  | 250 mil requisições API, 1 milhão via API CDN e 100 GB de transferência; 100 GB de assets         |
+| Cloudflare Workers | Conferir cotas de Workers Builds e static assets no plano institucional antes de publicar         |
 
-Fontes: [preços e limites do Sanity](https://www.sanity.io/pricing) e [limites do Cloudflare Pages](https://developers.cloudflare.com/pages/platform/limits/).
+Fontes: [preços e limites do Sanity](https://www.sanity.io/pricing) e [static assets no Workers](https://developers.cloudflare.com/workers/static-assets/).
 
 Imagens acessadas pelos visitantes consomem a franquia do Sanity. Publicações e commits de código consomem builds; retries do webhook também podem consumir. Domínio próprio, planos pagos, papéis adicionais e serviços opcionais podem ter custo. Confirme o plano ativo após qualquer período de avaliação; acompanhe Usage sem ativar upgrades pagos automaticamente.
 
@@ -198,7 +212,7 @@ A lista de próximos eventos reflete a data do **último build**. Sem publicaç�
 2. Na raiz, execute `npm run diagnose:content` (com `.env` configurado). O comando lista IDs e tipos visíveis publicamente e, se houver token local, também os rascunhos. Não imprime o token nem a URL secreta do webhook. Em Windows com erro de certificado, use `$env:NODE_OPTIONS='--use-system-ca'` antes do comando.
    Se um item criado no Studio não aparecer nem entre os rascunhos, confira o Project ID e o dataset do Studio hospedado; publicar uma nova versão do Studio pode ser necessário se ele ainda usa uma configuração antiga.
 3. Execute `npm run build` e confira as rotas geradas. A leitura acontece no build; visitantes não consultam o Sanity em tempo real.
-4. No Cloudflare Pages, confirme que o build usa `npm run build`, saída `dist`, dataset e Project ID corretos, e a **branch que contém este código**. O trabalho atual está em `joaoGabriel`; a `main` local ainda contém somente o commit inicial. Se o Cloudflare acompanha `main`, altere a branch de produção ou integre o código nela antes de esperar atualizações.
+4. No Cloudflare Workers Builds, confirme que o build usa `npm run build`, o deploy usa `npx wrangler@latest deploy`, `wrangler.jsonc` aponta para `dist`, e que o dataset, Project ID e **branch que contém este código** estão corretos.
 5. No Sanity Manage → API → Webhooks, confira se o webhook POST para o Deploy Hook do Cloudflare está ativo para `production` e consulte o histórico de tentativas. Depois confirme no Cloudflare se um novo deploy terminou com sucesso. Alterar só o `.env` local não altera as variáveis do Cloudflare.
 
 Os exemplos do modo `dev:demo`/`build:demo` vêm de `migration/legacy/` e não são editáveis no Studio até serem importados. `npm run migrate:import` cria rascunhos sem sobrescrever documentos existentes; revise o conteúdo fictício antes de publicar. `npm run migrate:verify-drafts` confere os 11 rascunhos caso a página institucional já tenha sido personalizada.
