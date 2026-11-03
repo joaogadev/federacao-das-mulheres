@@ -1,0 +1,946 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Login administrativo com limitação de tentativas",
+        "parameters": [
+          {
+            "name": "origin",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "summary": "Invalida a sessão; requer X-CSRF-Token",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "AdminController_live",
+        "summary": "Processo ativo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "AdminController_ready",
+        "summary": "Banco disponível",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/memberships": {
+      "get": {
+        "operationId": "AdminController_memberships",
+        "summary": "Lista filiações",
+        "parameters": [
+          {
+            "name": "financial",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "overdue",
+                "received",
+                "pending",
+                "refunded"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "PENDENTE",
+                "APROVADA",
+                "REPROVADA"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipPageDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/memberships/{id}": {
+      "get": {
+        "operationId": "AdminController_membership",
+        "summary": "Detalhe da filiação",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/memberships/{id}/decision": {
+      "post": {
+        "operationId": "AdminController_decision",
+        "summary": "Decisão institucional; exige ADMIN e CSRF",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/donations": {
+      "get": {
+        "operationId": "AdminController_donations",
+        "summary": "Lista doações avulsas",
+        "parameters": [
+          {
+            "name": "financial",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "overdue",
+                "received",
+                "pending",
+                "refunded"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DonationPageDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/reports/summary": {
+      "get": {
+        "operationId": "AdminController_summary",
+        "summary": "Indicadores separados por finalidade",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/events": {
+      "get": {
+        "operationId": "AdminController_events",
+        "summary": "Eventos com falha ou origem indefinida",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InboxEventDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/events/{id}/retry": {
+      "post": {
+        "operationId": "AdminController_retry",
+        "summary": "Reprocessar evento; exige ADMIN e CSRF",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/sync/reconcile": {
+      "post": {
+        "operationId": "AdminController_reconcile",
+        "summary": "Reconciliar com Asaas; exige ADMIN e CSRF",
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "cookie": []
+          }
+        ]
+      }
+    },
+    "/webhooks/asaas": {
+      "post": {
+        "operationId": "WebhookController_receive",
+        "summary": "Recebe e persiste evento Asaas; authToken no header asaas-access-token",
+        "parameters": [
+          {
+            "name": "asaas-access-token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsaasWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "asaas"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Federação das Mulheres — API administrativa",
+    "description": "",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "admin_session"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "CONSULTA"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role"
+        ]
+      },
+      "SessionDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "csrfToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "csrfToken"
+        ]
+      },
+      "PersonDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "document": {
+            "type": "object",
+            "nullable": true
+          },
+          "email": {
+            "type": "object",
+            "nullable": true
+          },
+          "phone": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "PaymentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "asaasId": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "subscriptionId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "donationId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "billingType": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "integer"
+          },
+          "netCents": {
+            "type": "integer",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "paidAt": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "receivedAt": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "billingType",
+          "amountCents"
+        ]
+      },
+      "SubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "asaasId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "cycle": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "integer"
+          },
+          "nextDueDate": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "cycle",
+          "amountCents",
+          "payments"
+        ]
+      },
+      "MembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDENTE",
+              "APROVADA",
+              "REPROVADA"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decidedAt": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PersonDto"
+          },
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionDto"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "createdAt",
+          "person",
+          "subscriptions"
+        ]
+      },
+      "MembershipPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MembershipDto"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "limit"
+        ]
+      },
+      "DecisionDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "APROVADA",
+              "REPROVADA"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "status",
+          "reason"
+        ]
+      },
+      "DonationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PersonDto"
+          },
+          "payment": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "person"
+        ]
+      },
+      "DonationPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DonationDto"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "receivedTotalCents": {
+            "type": "integer",
+            "description": "Total recebido em centavos, filtrado por busca de pessoa; independe do filtro financeiro"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "limit",
+          "receivedTotalCents"
+        ]
+      },
+      "SummaryDto": {
+        "type": "object",
+        "properties": {
+          "memberships": {
+            "type": "integer"
+          },
+          "donations": {
+            "type": "integer"
+          },
+          "monthlyReceivedCents": {
+            "type": "integer"
+          },
+          "donationReceivedCents": {
+            "type": "integer"
+          },
+          "monthlyOverdue": {
+            "type": "integer"
+          },
+          "lastSync": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "memberships",
+          "donations",
+          "monthlyReceivedCents",
+          "donationReceivedCents",
+          "monthlyOverdue"
+        ]
+      },
+      "InboxEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "FAILED",
+              "UNRESOLVED"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastError": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "state",
+          "attempts",
+          "receivedAt"
+        ]
+      },
+      "AsaasWebhookDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "payment": {
+            "type": "object"
+          },
+          "subscription": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "event"
+        ]
+      }
+    }
+  }
+}

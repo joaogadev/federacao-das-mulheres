@@ -1,0 +1,45 @@
+@api = http://localhost:3001
+@csrf = COLE_CSRF_TOKEN_DO_LOGIN
+@webhookToken = COLE_TOKEN_LOCAL_DE_32_CARACTERES
+@membershipId = COLE_UUID_DE_FILIAÇÃO
+@eventId = evt_fixture_001
+
+### Login: copie o csrfToken da resposta e mantenha o cookie no cliente HTTP
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{"email":"admin@exemplo.invalid","password":"COLE_SENHA_LOCAL"}
+
+### Sessão
+GET {{api}}/auth/me
+
+### Consultas
+GET {{api}}/memberships?page=1&limit=20
+
+### Doações
+GET {{api}}/donations?page=1&limit=20
+
+### Indicadores
+GET {{api}}/reports/summary
+
+### Decisão: CONSULTA deve receber 403
+POST {{api}}/memberships/{{membershipId}}/decision
+Content-Type: application/json
+X-CSRF-Token: {{csrf}}
+
+{"status":"APROVADA","reason":"Decisão da equipe"}
+
+### Fixture local, não é resposta real do Asaas
+POST {{api}}/webhooks/asaas
+Content-Type: application/json
+asaas-access-token: {{webhookToken}}
+
+{"id":"evt_fixture_001","event":"PAYMENT_RECEIVED","payment":{"id":"pay_fixture_001","customer":"cus_fixture_001","paymentLink":"link_fixture_doacao","value":25,"billingType":"PIX","status":"RECEIVED","dueDate":"2026-10-30"}}
+
+### Reprocessamento: CONSULTA deve receber 403
+POST {{api}}/events/{{eventId}}/retry
+X-CSRF-Token: {{csrf}}
+
+### Sair
+POST {{api}}/auth/logout
+X-CSRF-Token: {{csrf}}
