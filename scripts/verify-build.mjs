@@ -14,8 +14,8 @@ async function walk(directory) {
 const pages = await walk('dist');
 assert.equal(
   pages.length,
-  17,
-  'A demonstração deve gerar 17 páginas, incluindo /admin/ e 404.',
+  21,
+  'A demonstração deve gerar 21 páginas, incluindo filiação, doação, retornos, /admin/ e 404.',
 );
 for (const path of pages) {
   const html = await readFile(path, 'utf8');
