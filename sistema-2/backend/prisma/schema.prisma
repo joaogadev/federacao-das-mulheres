@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CONSULTA
+}
+enum MembershipStatus {
+  PENDENTE
+  APROVADA
+  REPROVADA
+}
+enum OriginKind {
+  AFFILIATION
+  DONATION
+}
+enum EventState {
+  PENDING
+  PROCESSING
+  PROCESSED
+  UNRESOLVED
+  FAILED
+}
+
+model AdminUser {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique
+  passwordHash String
+  role Role @default(CONSULTA)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  sessions AdminSession[]
+  audit AuditLog[]
+}
+model AdminSession {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  tokenHash String @unique
+  csrfToken String
+  expiresAt DateTime @db.Timestamptz(3)
+  revokedAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user AdminUser @relation(fields: [userId], references: [id])
+  @@index([userId, expiresAt])
+}
+model LoginAttempt {
+  key String @id
+  count Int @default(0)
+  windowStart DateTime @default(now()) @db.Timestamptz(3)
+  blockedUntil DateTime? @db.Timestamptz(3)
+}
+model Person {
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  document String?
+  email String?
+  phone String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  customers CustomerIdentity[]
+  memberships Membership[]
+  donations Donation[]
+  @@index([document])
+  @@index([email])
+}
+model CustomerIdentity {
+  id String @id @default(uuid()) @db.Uuid
+  personId String @db.Uuid
+  asaasId String @unique
+  person Person @relation(fields: [personId], references: [id])
+}
+model ResourceOrigin {
+  id String @id @default(uuid()) @db.Uuid
+  asaasLinkId String @unique
+  kind OriginKind
+  enabled Boolean @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  subscriptions Subscription[]
+  donations Donation[]
+}
+model Membership {
+  id String @id @default(uuid()) @db.Uuid
+  personId String @db.Uuid
+  status MembershipStatus @default(PENDENTE)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  decidedAt DateTime? @db.Timestamptz(3)
+  person Person @relation(fields: [personId], references: [id])
+  subscriptions Subscription[]
+  @@index([personId, status])
+}
+model Subscription {
+  id String @id @default(uuid()) @db.Uuid
+  membershipId String @db.Uuid
+  originId String @db.Uuid
+  asaasId String @unique
+  amountCents Int
+  cycle String
+  nextDueDate DateTime? @db.Timestamptz(3)
+  status String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  membership Membership @relation(fields: [membershipId], references: [id])
+  origin ResourceOrigin @relation(fields: [originId], references: [id])
+  payments Payment[]
+}
+model Payment {
+  id String @id @default(uuid()) @db.Uuid
+  asaasId String @unique
+  customerId String
+  subscriptionId String? @db.Uuid
+  donationId String? @unique @db.Uuid
+  amountCents Int
+  netCents Int?
+  billingType String
+  status String
+  dueDate DateTime? @db.Timestamptz(3)
+  paidAt DateTime? @db.Timestamptz(3)
+  receivedAt DateTime? @db.Timestamptz(3)
+  competence String?
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  donation Donation? @relation(fields: [donationId], references: [id])
+  @@index([status, dueDate])
+  @@index([subscriptionId, dueDate])
+}
+model Donation {
+  id String @id @default(uuid()) @db.Uuid
+  personId String @db.Uuid
+  originId String @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  person Person @relation(fields: [personId], references: [id])
+  origin ResourceOrigin @relation(fields: [originId], references: [id])
+  payment Payment?
+}
+model InboxEvent {
+  id String @id
+  type String
+  payload Json
+  state EventState @default(PENDING)
+  attempts Int @default(0)
+  receivedAt DateTime @default(now()) @db.Timestamptz(3)
+  nextAttemptAt DateTime @default(now()) @db.Timestamptz(3)
+  lockedUntil DateTime? @db.Timestamptz(3)
+  processedAt DateTime? @db.Timestamptz(3)
+  lastError String?
+  @@index([state, nextAttemptAt])
+}
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+  actorId String? @db.Uuid
+  action String
+  entityType String
+  entityId String
+  details Json?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  actor AdminUser? @relation(fields: [actorId], references: [id])
+  @@index([entityType, entityId, createdAt])
+}
+model SyncRun {
+  id String @id @default(uuid()) @db.Uuid
+  scope String
+  startedAt DateTime @default(now()) @db.Timestamptz(3)
+  finishedAt DateTime? @db.Timestamptz(3)
+  result String?
+  error String?
+}
+model SyncLease {
+  scope String @id
+  lockedUntil DateTime @db.Timestamptz(3)
+}
