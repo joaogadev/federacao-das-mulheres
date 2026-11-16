@@ -86,6 +86,57 @@ test('consulta real exclui rascunhos e versões, resolve imagens e preserva orde
   );
 });
 
+test('consulta do Sanity inclui campos editáveis de filiação e doação', async () => {
+  const { documents } = await readLegacy();
+  const samplePix =
+    '00020101021126580014br.gov.bcb.pix013600000000-0000-0000-0000-00000000000052040000530398654045.005802BR5905TESTE6007ARACAJU62070503***63047030';
+  const dataset = documents.map((document) =>
+    document._id === 'institucional'
+      ? {
+          ...document,
+          tagline: 'Chamada alterada no CMS',
+          history: 'História alterada no CMS',
+          privacyUrl: 'https://example.org/privacidade',
+          affiliationTermsUrl: 'https://example.org/termos',
+          affiliationMonthlyAmount: 5,
+          affiliationDescription: 'Texto alterado no CMS',
+          affiliationBenefits: ['Benefício alterado no CMS'],
+          affiliationPixInstructions: 'Instruções alteradas no CMS',
+          affiliationCancellationInstructions: 'Cancelamento alterado no CMS',
+          affiliationCheckoutUrl: 'https://pay.cakto.com.br/exemplo_123',
+          donationDescription: 'Texto de doação alterado no CMS',
+          donationInstructions: 'Instruções de doação alteradas no CMS',
+          donationPixCode: samplePix,
+        }
+      : document,
+  );
+  const result = await (await evaluate(parse(contentQuery), { dataset })).get();
+  const content = contentSchema.parse(result);
+  assert.equal(content.site.tagline, 'Chamada alterada no CMS');
+  assert.equal(content.site.history, 'História alterada no CMS');
+  assert.equal(content.site.privacyUrl, 'https://example.org/privacidade');
+  assert.equal(content.site.affiliationTermsUrl, 'https://example.org/termos');
+  assert.equal(content.site.affiliationMonthlyAmount, 5);
+  assert.equal(content.site.affiliationDescription, 'Texto alterado no CMS');
+  assert.equal(
+    content.site.affiliationBenefits?.[0],
+    'Benefício alterado no CMS',
+  );
+  assert.equal(
+    content.site.affiliationCheckoutUrl,
+    'https://pay.cakto.com.br/exemplo_123',
+  );
+  assert.equal(
+    content.site.donationDescription,
+    'Texto de doação alterado no CMS',
+  );
+  assert.equal(
+    content.site.donationInstructions,
+    'Instruções de doação alteradas no CMS',
+  );
+  assert.equal(content.site.donationPixCode, samplePix);
+});
+
 test('conteúdo ausente, duplicado ou inválido impede publicação; listas vazias são válidas', async () => {
   const base = demoContent((await readLegacy()).documents);
   assert.throws(() => contentSchema.parse({ ...base, site: null }));

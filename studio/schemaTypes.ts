@@ -1,4 +1,6 @@
 import { defineArrayMember, defineField, defineType } from 'sanity';
+import { hostedCaktoCheckout } from '../src/lib/cakto-link';
+import { parsePixCode } from '../src/lib/pix';
 
 const body = defineType({
   name: 'body',
@@ -228,6 +230,8 @@ const institucional = defineType({
     { name: 'inicio', title: 'Página inicial', default: true },
     { name: 'sobre', title: 'Sobre a Federação' },
     { name: 'contato', title: 'Contato e redes sociais' },
+    { name: 'afiliacao', title: 'Filiação' },
+    { name: 'doacao', title: 'Doações' },
   ],
   fields: [
     institutionalText('name', 'Nome da instituição', 'inicio', false),
@@ -260,7 +264,108 @@ const institucional = defineType({
     institutionalText('address', 'Localização', 'contato', false),
     institutionalUrl('instagram', 'Link do Instagram'),
     institutionalUrl('facebook', 'Link do Facebook'),
-    institutionalUrl('donationUrl', 'Link externo para doações'),
+    defineField({
+      name: 'donationUrl',
+      title: 'Link antigo de doações (legado)',
+      type: 'url',
+      group: 'doacao',
+      hidden: true,
+      description:
+        'Campo legado preservado para manter documentos existentes sem utilizá-lo no site.',
+    }),
+    defineField({
+      name: 'privacyUrl',
+      title: 'Política de privacidade da Federação',
+      type: 'url',
+      group: 'afiliacao',
+      validation: (Rule) => Rule.uri({ scheme: ['https'] }),
+    }),
+    defineField({
+      name: 'affiliationTermsUrl',
+      title: 'Termos de filiação',
+      type: 'url',
+      group: 'afiliacao',
+      validation: (Rule) => Rule.uri({ scheme: ['https'] }),
+    }),
+    defineField({
+      name: 'affiliationCheckoutUrl',
+      title: 'Checkout de filiação na Cakto',
+      type: 'url',
+      group: 'afiliacao',
+      description:
+        'Use o checkout da conta institucional, nunca o da conta pessoal de teste.',
+      validation: (Rule) =>
+        Rule.uri({ scheme: ['https'] }).custom((value) =>
+          !value || hostedCaktoCheckout(value)
+            ? true
+            : 'Use um checkout HTTPS em pay.cakto.com.br.',
+        ),
+    }),
+    defineField({
+      name: 'affiliationMonthlyAmount',
+      title: 'Mensalidade informativa (R$)',
+      type: 'number',
+      group: 'afiliacao',
+      description: 'Deve ser igual ao valor configurado no checkout da Cakto.',
+      validation: (Rule) => Rule.positive().precision(2),
+    }),
+    defineField({
+      name: 'affiliationDescription',
+      title: 'Apresentação da filiação',
+      type: 'text',
+      group: 'afiliacao',
+      rows: 4,
+    }),
+    defineField({
+      name: 'affiliationBenefits',
+      title: 'Benefícios da filiação',
+      type: 'array',
+      group: 'afiliacao',
+      of: [{ type: 'string' }],
+    }),
+    defineField({
+      name: 'affiliationPixInstructions',
+      title: 'Instruções sobre Pix Automático',
+      type: 'text',
+      group: 'afiliacao',
+      rows: 4,
+    }),
+    defineField({
+      name: 'affiliationCancellationInstructions',
+      title: 'Instruções de cancelamento',
+      type: 'text',
+      group: 'afiliacao',
+      rows: 4,
+    }),
+    defineField({
+      name: 'donationDescription',
+      title: 'Texto da página de doações',
+      type: 'text',
+      group: 'doacao',
+      rows: 4,
+    }),
+    defineField({
+      name: 'donationInstructions',
+      title: 'Instruções de doação',
+      type: 'text',
+      group: 'doacao',
+      rows: 4,
+    }),
+    defineField({
+      name: 'donationPixCode',
+      title: 'Código Pix copia e cola',
+      type: 'text',
+      group: 'doacao',
+      rows: 5,
+      description:
+        'O QR Code é gerado automaticamente deste código. Confira recebedora e valor antes de publicar.',
+      validation: (Rule) =>
+        Rule.custom((value) =>
+          !value || parsePixCode(value)
+            ? true
+            : 'Código Pix estático inválido ou CRC incorreto.',
+        ),
+    }),
   ],
   preview: { select: { title: 'name' } },
 });

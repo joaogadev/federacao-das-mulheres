@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { hostedCaktoCheckout } from './cakto-link';
+import { parsePixCode } from './pix';
 
 const text = z.string().trim().min(1);
 const date = z
@@ -85,7 +87,30 @@ export const siteSchema = z.object({
   address: text,
   instagram: webUrl,
   facebook: webUrl,
-  donationUrl: webUrl,
+  donationUrl: webUrl.nullish(),
+  privacyUrl: webUrl.nullish(),
+  affiliationTermsUrl: webUrl.nullish(),
+  affiliationCheckoutUrl: z
+    .string()
+    .refine(
+      (value) => Boolean(hostedCaktoCheckout(value)),
+      'Use um checkout HTTPS da Cakto',
+    )
+    .nullish(),
+  affiliationMonthlyAmount: z.number().positive().nullish(),
+  affiliationDescription: text.nullish(),
+  affiliationBenefits: z.array(text).nullish(),
+  affiliationPixInstructions: text.nullish(),
+  affiliationCancellationInstructions: text.nullish(),
+  donationDescription: text.nullish(),
+  donationInstructions: text.nullish(),
+  donationPixCode: z
+    .string()
+    .refine(
+      (value) => Boolean(parsePixCode(value)),
+      'Código Pix estático inválido',
+    )
+    .nullish(),
 });
 export const contentSchema = z
   .object({
