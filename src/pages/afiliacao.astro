@@ -1,62 +1,164 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
-import { hostedAsaasLink, publicHttpsLink } from '../lib/asaas-links';
-const link = hostedAsaasLink(import.meta.env.PUBLIC_ASAAS_AFFILIATION_URL);
-const privacy = publicHttpsLink(import.meta.env.PUBLIC_PRIVACY_URL);
-const terms = publicHttpsLink(import.meta.env.PUBLIC_AFFILIATION_TERMS_URL);
+import { hostedCaktoCheckout } from '../lib/cakto-link';
+import { publicHttpsLink } from '../lib/asaas-links';
+import { getSite } from '../lib/content';
+const site = await getSite();
+const mode = import.meta.env.PUBLIC_AFFILIATION_MODE;
+const pilot = mode === 'pilot' && process.env.CONTENT_SOURCE === 'demo';
+const checkout = hostedCaktoCheckout(
+  pilot
+    ? import.meta.env.PUBLIC_AFFILIATION_URL
+    : (site.affiliationCheckoutUrl ?? undefined),
+);
+const privacy = publicHttpsLink(site.privacyUrl ?? undefined);
+const terms = publicHttpsLink(site.affiliationTermsUrl ?? undefined);
+const amount = pilot
+  ? Number(import.meta.env.TEST_AFFILIATION_AMOUNT)
+  : site.affiliationMonthlyAmount;
+const validAmount =
+  typeof amount === 'number' && Number.isFinite(amount) && amount > 0;
+const formattedAmount = validAmount
+  ? new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(amount)
+  : null;
+const production =
+  mode === 'production' &&
+  Boolean(
+    checkout &&
+    privacy &&
+    terms &&
+    validAmount &&
+    site.affiliationDescription &&
+    site.affiliationPixInstructions &&
+    site.affiliationCancellationInstructions,
+  );
+const available = Boolean(checkout && (pilot || production));
 ---
 
-<BaseLayout title="Quero me afiliar">
+<BaseLayout title="Quero me afiliar" noindex={!production || !checkout}>
   <PageHeader
     eyebrow="Participe"
     title="Quero me afiliar"
-    description="Participe da Federação das Mulheres."
+    description="Conheça a filiação e o pagamento mensal por Pix Automático."
   />
-  <section class="section">
+  <section class="section affiliation-page">
     <div class="container narrow prose">
-      <p>
-        A filiação prevê uma contribuição mensal. No fluxo hospedado pelo Asaas,
-        você informa seus dados e realiza o pagamento de cada cobrança Pix. As
-        cobranças seguintes são geradas mensalmente; o Pix comum não é debitado
-        automaticamente.
-      </p>
-      <p>
-        O pagamento e a análise institucional são etapas distintas. Uma
-        contribuição paga não significa aprovação da filiação. O valor e as
-        regras serão apresentados no Asaas quando aprovados e configurados pela
-        Federação.
-      </p>
       {
-        link ? (
-          <a class="button" href={link} rel="noopener noreferrer">
-            Iniciar filiação no Asaas
-          </a>
-        ) : (
-          <>
-            <button class="button" type="button" disabled>
-              Iniciar filiação no Asaas
-            </button>
-            <p class="unavailable" role="status">
-              A filiação online está temporariamente indisponível. O link de
-              pagamento ainda não foi validado e ativado.
+        pilot && (
+          <div class="unavailable" role="status">
+            <strong>Avaliação da plataforma</strong>
+            <p>
+              Este checkout pertence a uma conta pessoal de teste. Ele pode
+              solicitar dados reais e cobrar de verdade. Não conclua cadastro,
+              autorização bancária ou pagamento nesta avaliação. O valor
+              mostrado aqui é demonstrativo; o checkout pode apresentar outro
+              valor e deve ser conferido antes de qualquer pagamento.
             </p>
-          </>
+          </div>
         )
       }
+
+      <h2>Por que se afiliar?</h2>
+      <p>
+        {
+          site.affiliationDescription ??
+            'A filiação é uma forma de participar e contribuir com as atividades da Federação das Mulheres. As condições de participação serão detalhadas nos termos de filiação aprovados pela Federação.'
+        }
+      </p>
+
+      {
+        site.affiliationBenefits?.length ? (
+          <ul>
+            {site.affiliationBenefits.map((benefit) => (
+              <li>{benefit}</li>
+            ))}
+          </ul>
+        ) : null
+      }
+
+      <div class="affiliation-price">
+        <span>{pilot ? 'Mensalidade de teste no site' : 'Mensalidade'}</span>
+        <strong
+          >{formattedAmount ?? 'Valor a definir'}
+          <small>{formattedAmount ? 'por mês' : ''}</small></strong
+        >
+        <p>A primeira mensalidade é o pagamento inicial da filiação.</p>
+      </div>
+
+      <h2>Como funciona</h2>
+      <ol>
+        <li>Você abre o checkout seguro da Cakto e informa seus dados.</li>
+        <li>
+          Seleciona Pix Automático e confere valor, periodicidade e condições.
+        </li>
+        <li>
+          Confirma no aplicativo do seu banco o primeiro pagamento e a
+          autorização recorrente, conforme as etapas exibidas.
+        </li>
+        <li>
+          As mensalidades seguintes são processadas pela Cakto, enquanto a
+          autorização estiver válida.
+        </li>
+      </ol>
+      <p>
+        A filiação só fica financeiramente ativa após a confirmação do primeiro
+        pagamento. A autorização dos pagamentos futuros é uma situação separada;
+        consulte as duas confirmações no checkout e no aplicativo bancário.
+      </p>
+      {
+        site.affiliationPixInstructions && (
+          <p>{site.affiliationPixInstructions}</p>
+        )
+      }
+      {
+        available ? (
+          <a class="button" href={checkout!} rel="noopener noreferrer">
+            {pilot ? 'Ver checkout de avaliação' : 'Iniciar filiação na Cakto'}
+          </a>
+        ) : (
+          <div class="unavailable" role="status">
+            <button class="button" type="button" disabled>
+              Iniciar filiação
+            </button>
+            <p>
+              A filiação online ainda não está disponível. A Federação precisa
+              validar o checkout e publicar a política de privacidade e os
+              termos de filiação.
+            </p>
+          </div>
+        )
+      }
+
+      <h2>Cancelamento</h2>
+      <p>
+        {
+          site.affiliationCancellationInstructions ??
+            'A assinante pode consultar e cancelar a recorrência no portal de assinaturas da Cakto. A autorização Pix também pode ser gerenciada no aplicativo do banco. As regras da filiação e de eventual reembolso devem constar dos termos aprovados pela Federação.'
+        }
+      </p>
+      <p>
+        <a href="https://assinatura.cakto.com.br/" rel="noopener noreferrer"
+          >Portal de assinaturas da Cakto</a
+        >
+      </p>
+
       <p class="legal-links">
         {
           privacy ? (
-            <a href={privacy}>Política de privacidade</a>
+            <a href={privacy}>Política de privacidade da Federação</a>
           ) : (
-            <span>Política de privacidade ainda não publicada.</span>
+            <span>Política de privacidade da Federação em preparação.</span>
           )
         }
         {
           terms ? (
             <a href={terms}>Termos de filiação</a>
           ) : (
-            <span>Termos de filiação ainda não publicados.</span>
+            <span>Termos de filiação em preparação.</span>
           )
         }
       </p>
