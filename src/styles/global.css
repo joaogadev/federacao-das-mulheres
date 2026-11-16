@@ -22,6 +22,15 @@ body {
   margin: 0;
 }
 
+.demo-banner {
+  padding: 10px 20px;
+  background: #49283a;
+  color: white;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 h1,
 h2,
 h3,
@@ -691,6 +700,98 @@ img {
   flex-wrap: wrap;
   gap: 8px 22px;
   margin-top: 28px;
+}
+
+.affiliation-page .unavailable p {
+  margin: 6px 0 0;
+}
+
+.affiliation-price {
+  background: var(--cream);
+  border-left: 4px solid var(--plum);
+  padding: 22px 26px;
+  margin: 32px 0;
+}
+
+.affiliation-price span {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--plum);
+}
+
+.affiliation-price strong {
+  display: block;
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 1.2;
+  color: var(--plum-dark);
+}
+
+.affiliation-price small {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.affiliation-price p {
+  margin: 8px 0 0;
+}
+
+.pix-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  margin: 28px 0;
+}
+
+.pix-qr {
+  padding: 12px;
+  background: white;
+  border: 1px solid #dfd1d8;
+}
+
+.pix-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pix-details h2 {
+  margin-top: 0;
+}
+
+.pix-details label {
+  display: block;
+  font-weight: 700;
+  margin: 20px 0 8px;
+}
+
+.pix-details textarea {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px;
+  font: inherit;
+  overflow-wrap: anywhere;
+  border: 1px solid #bca9b3;
+  background: white;
+  color: #302a2c;
+}
+
+.pix-details button {
+  margin-top: 12px;
+}
+
+@media (max-width: 700px) {
+  .pix-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .pix-qr {
+    width: min(100%, 300px);
+    margin: 0 auto;
+  }
 }
 
 .cta-band {

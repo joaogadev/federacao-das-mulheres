@@ -1,41 +1,99 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
-import { hostedAsaasLink, publicHttpsLink } from '../lib/asaas-links';
-const link = hostedAsaasLink(import.meta.env.PUBLIC_ASAAS_DONATION_URL);
-const privacy = publicHttpsLink(import.meta.env.PUBLIC_PRIVACY_URL);
+import QRCode from 'qrcode';
+import { publicHttpsLink } from '../lib/asaas-links';
+import { getSite } from '../lib/content';
+import { parsePixCode } from '../lib/pix';
+
+const site = await getSite();
+const demo = process.env.CONTENT_SOURCE === 'demo';
+const pix = parsePixCode(
+  demo
+    ? import.meta.env.TEST_DONATION_PIX_CODE
+    : (site.donationPixCode ?? undefined),
+);
+const qrSvg = pix
+  ? await QRCode.toString(pix.code, {
+      type: 'svg',
+      width: 300,
+      margin: 2,
+      errorCorrectionLevel: 'M',
+    })
+  : null;
+const formattedAmount = pix?.amount
+  ? new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(pix.amount)
+  : 'valor livre';
+const privacy = publicHttpsLink(site.privacyUrl ?? undefined);
 ---
 
-<BaseLayout title="Faça uma doação">
+<BaseLayout title="Faça uma doação" noindex={demo}>
   <PageHeader
     eyebrow="Apoie"
     title="Faça uma doação"
     description="Apoie as ações da Federação das Mulheres."
   />
-  <section class="section">
+  <section class="section donation-page">
     <div class="container narrow prose">
-      <p>
-        A doação é avulsa e pode ser paga por Pix na página hospedada pelo
-        Asaas. Doar não cria filiação, aprovação institucional nem mensalidade.
-        Consulte o valor disponível na página de pagamento antes de confirmar.
-      </p>
       {
-        link ? (
-          <a class="button" href={link} rel="noopener noreferrer">
-            Fazer uma doação
-          </a>
-        ) : (
-          <>
-            <button class="button" type="button" disabled>
-              Fazer uma doação
-            </button>
-            <p class="unavailable" role="status">
-              A doação online está temporariamente indisponível. O link de
-              pagamento ainda não foi configurado e validado.
-            </p>
-          </>
+        demo && (
+          <p class="unavailable">
+            <strong>Doação de teste.</strong> Este QR Code aponta para uma conta
+            pessoal e pode transferir dinheiro de verdade. Não o utilize como
+            doação à Federação.
+          </p>
         )
       }
+      <p>
+        {
+          site.donationDescription ??
+            'A doação por Pix é avulsa e independente da filiação. Antes de confirmar no banco, confira a pessoa recebedora e o valor.'
+        }
+      </p>
+      {
+        pix && qrSvg ? (
+          <div class="pix-panel">
+            <div
+              class="pix-qr"
+              role="img"
+              aria-label={`QR Code Pix para ${pix.recipient}, ${formattedAmount}`}
+              set:html={qrSvg}
+            />
+            <div class="pix-details">
+              <h2>Doe com Pix</h2>
+              <p>
+                <strong>Recebedora:</strong> {pix.recipient}
+              </p>
+              <p>
+                <strong>Valor:</strong> {formattedAmount}
+              </p>
+              <p>
+                {site.donationInstructions ??
+                  'Abra o aplicativo do seu banco, leia o QR Code ou copie o código abaixo. Confira os dados antes de confirmar.'}
+              </p>
+              <label for="pix-code">Código Pix copia e cola</label>
+              <textarea id="pix-code" rows="4" readonly>
+                {pix.code}
+              </textarea>
+              <button class="button" id="copy-pix" type="button">
+                Copiar código Pix
+              </button>
+              <p id="copy-status" role="status" aria-live="polite" />
+            </div>
+          </div>
+        ) : (
+          <p class="unavailable" role="status">
+            O Pix de doação ainda não foi configurado e validado pela Federação.
+          </p>
+        )
+      }
+      <p>
+        Este site não recebe confirmação automática da doação. Consulte o
+        comprovante no aplicativo bancário.
+      </p>
       {
         privacy ? (
           <p>
@@ -48,3 +106,19 @@ const privacy = publicHttpsLink(import.meta.env.PUBLIC_PRIVACY_URL);
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  const copyButton = document.querySelector<HTMLButtonElement>('#copy-pix');
+  const codeField = document.querySelector<HTMLTextAreaElement>('#pix-code');
+  const status = document.querySelector<HTMLElement>('#copy-status');
+  copyButton?.addEventListener('click', async () => {
+    if (!codeField || !status) return;
+    try {
+      await navigator.clipboard.writeText(codeField.value);
+      status.textContent = 'Código Pix copiado.';
+    } catch {
+      status.textContent =
+        'Não foi possível copiar automaticamente. Selecione e copie o código acima.';
+    }
+  });
+</script>
