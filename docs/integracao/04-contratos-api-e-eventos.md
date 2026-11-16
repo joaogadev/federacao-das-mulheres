@@ -1,6 +1,10 @@
 # 04 — Contratos da API e eventos
 
-Base local: `http://localhost:3001`. Todos os corpos são JSON. Datas retornam ISO 8601 UTC; vencimentos do Asaas, que são datas civis, são gravados ao meio-dia UTC e exibidos em `America/Fortaleza`. Valores `*Cents` são inteiros em centavos, sem ponto flutuante no banco. Paginação usa `page` a partir de 1 e `limit` até 100. Erros NestJS têm `statusCode`, `message` e `error`; `401` indica falta/expiração de sessão, `403` indica permissão ou CSRF inválido, `400` indica entrada inválida, `503` indisponibilidade da integração. Credenciais nunca aparecem nas respostas.
+Base local: `http://localhost:3001`. As rotas com corpo usam JSON, exceto os uploads de documentos e digitalizações em multipart/form-data. Datas retornam ISO 8601 UTC; vencimentos do Asaas, que são datas civis, são gravados ao meio-dia UTC e exibidos em `America/Fortaleza`. Valores `*Cents` são inteiros em centavos, sem ponto flutuante no banco. Paginação usa `page` a partir de 1 e `limit` até 100. Erros NestJS têm `statusCode`, `message` e `error`; `401` indica falta/expiração de sessão, `403` indica permissão ou CSRF inválido, `400` indica entrada inválida, `503` indisponibilidade da integração. Credenciais nunca aparecem nas respostas.
+
+As rotas `/documents` pertencem à API de arquivamento legada e não são usadas pelo digitalizador local do painel. O `POST /documents` usa `multipart/form-data`; as demais requisições com corpo usam JSON.
+
+O digitalizador usa `/scans`: `POST /scans` recebe o PDF visual em `multipart/form-data` com `pageCount` e título/OCR opcionais (ADMIN + CSRF); `GET /scans` lista metadados, `GET /scans/:id` retorna detalhes e OCR, e `GET /scans/:id/file` entrega o PDF privado (ADMIN ou CONSULTA). Os arquivos ficam no PostgreSQL via Prisma.
 
 | Método e rota                       | Autenticação/permissão       | Resultado                                                                        |
 | ----------------------------------- | ---------------------------- | -------------------------------------------------------------------------------- |
@@ -17,6 +21,11 @@ Base local: `http://localhost:3001`. Todos os corpos são JSON. Datas retornam I
 | `POST /events/:id/retry`            | ADMIN + CSRF                 | agenda nova tentativa                                                            |
 | `POST /sync/reconcile`              | ADMIN + CSRF                 | consulta paginada Asaas; `count` vinculados                                      |
 | `POST /webhooks/asaas`              | `asaas-access-token`         | `200 {"received":true}` após persistência; duplicata retorna 200 sem novo evento |
+| `GET /documents`                    | ADMIN ou CONSULTA            | Lista paginada de metadados; sem conteúdo binário; filtros `search` e `status`    |
+| `GET /documents/:id`                | ADMIN ou CONSULTA            | Formulário, autoria e resultado da conferência                                    |
+| `GET /documents/:id/file`           | ADMIN ou CONSULTA            | Imagem/PDF privado, sem cache                                                     |
+| `POST /documents`                   | ADMIN + CSRF                 | `multipart/form-data` com foto/arquivo e campos; cria registro PENDENTE           |
+| `POST /documents/:id/review`        | ADMIN + CSRF                 | Registra CONFERIDO ou DIVERGENTE e auditoria                                       |
 
 Exemplo fictício de decisão:
 

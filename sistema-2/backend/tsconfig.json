@@ -10,7 +10,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node", "multer"]
   },
   "include": ["src", "scripts", "tests"]
 }

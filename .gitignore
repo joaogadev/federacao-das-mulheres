@@ -14,4 +14,7 @@ sistema-2/**/dist/
 sistema-2/**/tsconfig.tsbuildinfo
 sistema-2/**/.npm-cache/
 sistema-2/**/.env
+sistema-2/frontend/public/ocr/
+sistema-2/frontend/public/opencv.js
+sistema-2/frontend/public/scanner-geometry.js
 sistema-2/.local-pg/

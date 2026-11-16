@@ -44,7 +44,7 @@ npm --prefix sistema-2/frontend run dev
 npm run dev:demo
 ```
 
-Abra `http://localhost:5173`, `http://localhost:3001/health/ready` e `http://localhost:4321`. A API deve responder `{"status":"ok"}` no health check. O site demo é fictício e não se comunica com a API. Para conteúdo editorial real, configure Sanity e execute `npm run dev` em vez de `dev:demo`.
+Abra `http://localhost:5173`, `http://localhost:3001/health/ready` e `http://localhost:4321`. A API deve responder `{"status":"ok"}` no health check. Em desenvolvimento, o painel também aceita `127.0.0.1`, usando o mesmo host na API para manter o cookie de sessão. O site demo é fictício e não se comunica com a API. Para conteúdo editorial real, configure Sanity e execute `npm run dev` em vez de `dev:demo`.
 
 ## Bash
 

@@ -6,7 +6,9 @@ As páginas **Quero me afiliar** e **Faça uma doação** usam URLs públicas de
 
 ## Sistema 2 — início rápido
 
-Instale as dependências em `sistema-2/backend` e `sistema-2/frontend`, copie os `.env.example`, inicie o PostgreSQL pelo Compose, aplique `npm --prefix sistema-2/backend run db:migrate` e crie o administrador com `ADMIN_EMAIL`, `ADMIN_PASSWORD` e `npm --prefix sistema-2/backend run admin:create`. Os comandos completos para PowerShell e Bash estão no [roteiro local](docs/integracao/02-execucao-local.md). A API está em `localhost:3001` e o painel em `localhost:5173`.
+Instale as dependências em `sistema-2/backend` e `sistema-2/frontend`, copie os `.env.example`, inicie o PostgreSQL pelo Compose, aplique `npm --prefix sistema-2/backend run db:migrate` e crie o administrador com `ADMIN_EMAIL`, `ADMIN_PASSWORD` e `npm --prefix sistema-2/backend run admin:create`. Os comandos completos para PowerShell e Bash estão no [roteiro local](docs/integracao/02-execucao-local.md). A API está em `http://localhost:3001` e o painel em **`http://localhost:5173`**.
+
+No painel, a seção **Digitalizar** permite fotografar pelo celular ou enviar JPG, PNG e WebP pelo computador, inclusive várias páginas. O OpenCV corrige bordas e perspectiva; filtros, rotação e recorte manual permitem conferir o resultado. OCR em português e revisão do texto são opcionais. Ao clicar em **Salvar**, uma conta ADMIN grava o PDF visual e o texto OCR opcional no PostgreSQL via Prisma. Usuários ADMIN e CONSULTA podem reabrir os documentos na biblioteca do painel. O download continua disponível. Veja o [passo a passo do digitalizador](docs/integracao/08-documentos.md).
 
 ## Sistema 1 — site e edição
 
