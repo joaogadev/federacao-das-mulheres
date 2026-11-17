@@ -1,8 +1,8 @@
 # Federação das Mulheres — site institucional e administrativo
 
-O repositório contém o site institucional Astro (Sistema 1) e uma implementação própria do painel administrativo React, API NestJS e PostgreSQL (Sistema 2) em `sistema-2/`. A conexão financeira passa pelos links hospedados, API e webhooks do Asaas. Veja o [índice da integração](docs/integracao/README.md), especialmente [execução local](docs/integracao/02-execucao-local.md) e [como substituir o Sistema 2](docs/integracao/05-substituir-sistema-2.md).
+O repositório contém o site institucional Astro (Sistema 1) e uma implementação própria do painel administrativo React, API NestJS e PostgreSQL (Sistema 2) em `sistema-2/`. Nesta branch, a filiação está sendo avaliada com checkout hospedado Cakto, sem backend no site. O Sistema 2 permanece até a homologação da substituição. Veja [VIABILIDADE_PIX_AUTOMATICO.md](VIABILIDADE_PIX_AUTOMATICO.md) e [ARQUITETURA_NO_SYSTEM_2.md](ARQUITETURA_NO_SYSTEM_2.md).
 
-As páginas **Quero me afiliar** e **Faça uma doação** usam URLs públicas de links Asaas independentes. Sem link válido, mostram indisponibilidade. A combinação de Link de Pagamento recorrente com Pix ainda precisa de teste na conta Sandbox antes de ativar filiação. Nenhuma operação financeira real ou deploy foi feito nesta entrega.
+A página **Quero me afiliar** usa um checkout Cakto em modo de avaliação local. A página **Faça uma doação** gera QR Code a partir de um Pix estático validado; os valores de R$ 5 e o Pix pessoal existem somente no `.env` local de demonstração. Em produção, os dados de filiação e doação vêm do Sanity. O Studio Sanity foi atualizado; o site desta branch ainda não foi publicado no Cloudflare por esta entrega.
 
 ## Sistema 2 — início rápido
 
@@ -74,11 +74,11 @@ Não publique `dist/` gerado pela demonstração. O modo é bloqueado em CI e Cl
 | `SANITY_PROJECT_ID`            | `.env` e Cloudflare             | ID público do projeto                                          |
 | `SANITY_DATASET`               | `.env` e Cloudflare             | Dataset, normalmente `production`                              |
 | `SITE_URL`                     | `.env` e Cloudflare             | URL HTTPS definitiva, usada nos links canônicos                |
-| `PUBLIC_SANITY_STUDIO_URL`     | `.env` e Cloudflare             | URL HTTPS do Studio hospedado                                  |
-| `PUBLIC_ASAAS_AFFILIATION_URL` | `.env` e Cloudflare             | Link recorrente validado para filiação                         |
-| `PUBLIC_ASAAS_DONATION_URL`    | `.env` e Cloudflare             | Link avulso Pix para doação                                    |
-| `PUBLIC_PRIVACY_URL`           | `.env` e Cloudflare             | Política de privacidade publicada                              |
-| `PUBLIC_AFFILIATION_TERMS_URL` | `.env` e Cloudflare             | Termos de filiação publicados                                  |
+| `PUBLIC_SANITY_STUDIO_URL`     | `.env` e Cloudflare, opcional   | Substitui o Studio padrão `federacao-mulheres-se.sanity.studio` |
+| `PUBLIC_AFFILIATION_URL` | `.env` local | Checkout pessoal, usado somente na demonstração local |
+| `PUBLIC_AFFILIATION_MODE` | `.env` e Cloudflare | `pilot` só funciona com conteúdo demo; `production` exige dados publicados no Sanity |
+| `TEST_AFFILIATION_AMOUNT` | `.env` local | Valor informativo de teste, sem alterar a oferta da Cakto |
+| `TEST_DONATION_PIX_CODE` | `.env` local | Pix estático de teste, nunca usado no build de produção |
 | `SANITY_STUDIO_PROJECT_ID`     | `studio/.env`                   | Mesmo projeto do frontend                                      |
 | `SANITY_STUDIO_DATASET`        | `studio/.env`                   | Mesmo dataset do frontend                                      |
 | `SANITY_STUDIO_HOSTNAME`       | `studio/.env`                   | Nome escolhido para o subdomínio do Studio                     |
@@ -132,7 +132,7 @@ npm run studio:build
 npm run studio:deploy
 ```
 
-O deploy exige login e um projeto real. Escolha o hostname, registre o App ID quando fornecido e preencha `PUBLIC_SANITY_STUDIO_URL`. Atualizações automáticas do Studio estão habilitadas na configuração; mudanças nos schemas ainda exigem novo deploy técnico. Consulte a [documentação de hospedagem do Sanity](https://www.sanity.io/docs/studio/deployment).
+O deploy exige login e um projeto real. O endereço atual do Studio já é o destino padrão de `/admin/`; defina `PUBLIC_SANITY_STUDIO_URL` somente se ele mudar. Registre o App ID quando fornecido. Atualizações automáticas do Studio estão habilitadas na configuração; mudanças nos schemas ainda exigem novo deploy técnico. Consulte a [documentação de hospedagem do Sanity](https://www.sanity.io/docs/studio/deployment).
 
 No Cloudflare Workers Builds, conecte o repositório à branch que contém este código. Use **`npm run build`** como build e **`npx wrangler@latest deploy`** como comando de publicação; `wrangler.jsonc` serve `dist` como assets estáticos, sem código SSR. Configure Node 22.14.0 e as variáveis públicas do frontend como variáveis de **build**. Não use `build:demo` em produção. A instalação do frontend ocorre pelo lockfile da raiz; não instale o Studio no build do Worker. Esta entrega não fez publicação.
 

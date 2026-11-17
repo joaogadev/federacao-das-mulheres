@@ -11,7 +11,7 @@ Este roteiro descreve as etapas externas que não podem ser concluídas sem cont
 5. Cadastre o conteúdo institucional ou siga a importação descrita em [migration/README.md](migration/README.md). A importação cria rascunhos; nada aparece no site antes de publicar.
 6. Publique o documento institucional. As outras coleções podem começar vazias.
 7. Execute `npm run studio:check`, `npm run studio:build` e `npm run studio:deploy`. O último comando exige autenticação Sanity e efetivamente publica o painel.
-8. Registre hostname/App ID em `studio/.env`, quando fornecidos. `deployment.autoUpdates` está habilitado. Defina `PUBLIC_SANITY_STUDIO_URL` no frontend.
+8. Registre hostname/App ID em `studio/.env`, quando fornecidos. `deployment.autoUpdates` está habilitado. `/admin/` redireciona ao Studio atual; use `PUBLIC_SANITY_STUDIO_URL` somente se o endereço mudar.
 9. Convide pelo menos duas responsáveis com contas individuais. No Free, quem escreve precisa de Administrator; Viewer não edita. Explique os poderes administrativos e confirme o plano Free, sem depender de recursos de trial.
 
 O Studio não expõe tokens. Os campos institucionais são agrupados e há uma entrada única com ID fixo. A limitação de ações dessa entrada protege o fluxo editorial, não substitui autorização do Sanity.
@@ -33,9 +33,8 @@ O nome do Worker criado no Cloudflare deve coincidir com `name` em `wrangler.jso
 | `SANITY_PROJECT_ID`            | ID real do projeto                                      |
 | `SANITY_DATASET`               | `production`                                            |
 | `SITE_URL`                     | URL HTTPS canônica do site                              |
-| `PUBLIC_SANITY_STUDIO_URL`     | URL HTTPS do Studio                                     |
-| `PUBLIC_ASAAS_AFFILIATION_URL` | URL HTTPS do link recorrente validado em Sandbox        |
-| `PUBLIC_ASAAS_DONATION_URL`    | URL HTTPS do link avulso Pix validado                   |
+| `PUBLIC_SANITY_STUDIO_URL`     | Opcional: substitui o Studio padrão                     |
+| `PUBLIC_AFFILIATION_MODE`      | `production` após homologação; nunca usar `pilot` no site público |
 | Comando de deploy              | `npx wrangler@latest deploy`                            |
 
 Não configure token Sanity no build. Não defina `CONTENT_SOURCE=demo`; o código bloqueia esse modo no Cloudflare. Use um dataset separado para previews de código se necessário; no Free ambos os datasets devem conter apenas informações públicas. As variáveis de preview e produção são configuradas separadamente no painel.
@@ -48,7 +47,9 @@ Após cadastrar um domínio próprio, altere `SITE_URL` e gere um novo build. Re
 
 ### Variáveis de build no Worker
 
-No Worker conectado ao repositório, confirme `npm run build`, `npx wrangler@latest deploy` e a branch de produção. Cadastre `SITE_URL`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `PUBLIC_SANITY_STUDIO_URL` e URLs públicas Asaas validadas em **Settings → Build → Build variables and secrets**, não apenas em variáveis de runtime. Consulte [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/). Não inclua token do Sanity ou chave privada Asaas.
+No Worker conectado ao repositório, confirme `npm run build`, `npx wrangler@latest deploy` e a branch de produção. Cadastre `SITE_URL`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `PUBLIC_SANITY_STUDIO_URL` e `PUBLIC_AFFILIATION_MODE` em **Settings → Build → Build variables and secrets**, não apenas em variáveis de runtime. Consulte [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/). Não inclua token do Sanity ou credencial financeira. Não cadastre `TEST_AFFILIATION_AMOUNT`, `TEST_DONATION_PIX_CODE` ou `PUBLIC_AFFILIATION_URL` em produção.
+
+No Sanity, publique no documento **Informações da Federação** o checkout institucional, valor da mensalidade, textos da filiação, política de privacidade, termos, código Pix estático e instruções de doação. O QR é gerado a partir desse código; confira nome e valor no aplicativo bancário antes de publicar. A página de filiação só habilita o checkout em modo `production` quando esses campos essenciais estiverem presentes. O site não comprova pagamento nem autorização bancária.
 
 Se houver um projeto legado Pages publicado, mantenha-o até validar Workers com domínio e webhook de deploy; não trate `*.pages.dev` como endereço de Worker.
 
