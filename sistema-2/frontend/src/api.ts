@@ -5,7 +5,10 @@ export type Person = {
   name: string;
   email: string | null;
   phone: string | null;
+  document?: string | null;
 };
+export type CaktoOrder = { id:string; orderId:string; status:string; event:string; amountCents:number; paymentMethod:string; competence:string|null; paidAt:string|null };
+export type ManualMonth = { id:string; competence:string; paid:boolean; amountCents:number|null; paidAt:string|null; note:string|null; verifiedAt:string; verifiedBy?:{email:string} };
 export type Payment = {
   id: string;
   status: string;
@@ -26,7 +29,11 @@ export type Membership = {
   status: string;
   createdAt: string;
   person: Person;
+  source: 'ASAAS' | 'CAKTO' | 'MANUAL' | 'MISTA';
+  caktoSubscriptionStatus?: string | null;
   subscriptions: Subscription[];
+  caktoOrders: CaktoOrder[];
+  manualMonths: ManualMonth[];
   history?: {
     id: string;
     action: string;
