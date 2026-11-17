@@ -258,7 +258,9 @@ function Members({ user }: { user: User }) {
     [manualName, setManualName] = useState(''),
     [manualCpf, setManualCpf] = useState(''),
     [manualPhone, setManualPhone] = useState(''),
-    [manualError, setManualError] = useState('');
+    [manualError, setManualError] = useState(''),
+    [syncBusy, setSyncBusy] = useState(false),
+    [syncMessage, setSyncMessage] = useState('');
   const path = `/memberships?page=${page}&search=${encodeURIComponent(query)}${filter ? `&status=${filter}` : ''}${financial ? `&financial=${financial}` : ''}`;
   const { data, error, loading, reload } = useLoad<Page<Membership>>(path);
   async function registerManual(e: React.FormEvent) {
@@ -270,6 +272,18 @@ function Members({ user }: { user: User }) {
   }
   return (
     <>
+      {user.role === 'ADMIN' && <div className="filters">
+        <button disabled={syncBusy} onClick={async () => {
+          setSyncBusy(true); setSyncMessage('');
+          try {
+            const result = await api<{seen:number;processed:number;skipped:number;failed:number}>('/sync/cakto/reconcile','POST');
+            setSyncMessage(`${result.seen} pedidos consultados; ${result.processed} processados; ${result.skipped} ignorados; ${result.failed} com falha.`);
+            reload();
+          } catch (cause) { setSyncMessage((cause as Error).message); }
+          finally { setSyncBusy(false); }
+        }}>{syncBusy ? 'Consultando Cakto…' : 'Conciliar com Cakto'}</button>
+        {syncMessage && <p role="status">{syncMessage}</p>}
+      </div>}
       {user.role === 'ADMIN' && <form className="filters" onSubmit={registerManual}>
         <h2>Cadastrar afiliada anterior à Cakto</h2>
         <label>Nome<input required value={manualName} onChange={e=>setManualName(e.target.value)} /></label>
