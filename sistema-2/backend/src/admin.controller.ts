@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Database } from './prisma.service';
 import { AuthService } from './auth';
 import { AsaasService } from './asaas.service';
+import { CaktoService } from './cakto.service';
 import { DecisionDto, DonationPageDto, InboxEventDto, MembershipDto, MembershipPageDto, SummaryDto } from './api.dto';
 import { validCpf } from './cpf';
 
@@ -17,7 +18,7 @@ const manualMonth=z.object({competence:z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$
 @ApiTags('admin')
 @Controller()
 export class AdminController {
-  constructor(private readonly db:Database,private readonly auth:AuthService,private readonly asaas:AsaasService) {}
+  constructor(private readonly db:Database,private readonly auth:AuthService,private readonly asaas:AsaasService,private readonly cakto:CaktoService) {}
 
   @Get('health/live') @ApiOperation({summary:'Processo ativo'})
   live() {return {status:'ok'};}
@@ -156,6 +157,16 @@ export class AdminController {
     const session=await this.auth.require(req,'ADMIN',true);
     const result=await this.asaas.reconcile();
     await this.db.auditLog.create({data:{actorId:session.userId,action:'RECONCILE',entityType:'SyncRun',entityId:'asaas',details:result}});
+    return result;
+  }
+
+  @Post('sync/cakto/reconcile') @ApiOperation({summary:'Consultar pedidos Cakto e conciliar filiações; exige ADMIN e CSRF'})
+  @ApiCookieAuth()
+  @ApiHeader({name:'X-CSRF-Token'})
+  async reconcileCakto(@Req() req:Request) {
+    const session=await this.auth.require(req,'ADMIN',true);
+    const result=await this.cakto.reconcile();
+    await this.db.auditLog.create({data:{actorId:session.userId,action:'CAKTO_RECONCILE',entityType:'SyncRun',entityId:'cakto',details:result}});
     return result;
   }
 }

@@ -1,13 +1,14 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, OnModuleDestroy, OnModuleInit, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { Database } from './prisma.service';
 import { config } from './config';
 import { validCpf } from './cpf';
+import { CaktoClient } from './cakto.client';
 
 const customer = z.object({
-  id: z.union([z.string(), z.number()]),
+  id: z.union([z.string(), z.number()]).optional(),
   name: z.string().trim().min(1),
   phone: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
@@ -17,11 +18,11 @@ const order = z.object({
   id: z.string().min(1),
   status: z.string(),
   offer_type: z.string().optional(),
-  amount: z.number().nonnegative().nullable().optional(),
+  amount: z.coerce.number().nonnegative().nullable().optional(),
   paymentMethod: z.string().optional(),
   customer,
   product: z.object({ id: z.string() }),
-  subscription: z.object({ id: z.union([z.string(), z.number()]) }).passthrough().nullable().optional(),
+  subscription: z.union([z.object({ id: z.union([z.string(), z.number()]) }).passthrough(),z.string(),z.number()]).nullable().optional(),
   subscription_period: z.number().nullable().optional(),
   paidAt: z.string().nullable().optional(),
   due_date: z.string().nullable().optional(),
@@ -42,8 +43,19 @@ export function validCaktoSignature(raw: Buffer | undefined, timestamp: string |
 }
 
 @Injectable()
-export class CaktoService {
-  constructor(private readonly db: Database) {}
+export class CaktoService implements OnModuleInit, OnModuleDestroy {
+  private timer?: NodeJS.Timeout;
+  constructor(private readonly db: Database, private readonly api: CaktoClient) {}
+
+  onModuleInit() {
+    if (!config.CAKTO_CLIENT_ID || !config.CAKTO_CLIENT_SECRET || !config.CAKTO_PRODUCT_ID) return;
+    this.timer = setInterval(() => void this.reconcile().catch(() => {
+      console.error('Conciliação Cakto falhou; consulte a última execução no painel.');
+    }), config.CAKTO_RECONCILE_INTERVAL_MINUTES * 60_000);
+    this.timer.unref();
+  }
+
+  onModuleDestroy() { if (this.timer) clearInterval(this.timer); }
 
   async receive(raw: Buffer | undefined, timestamp: string | undefined, signature: string | undefined, body: unknown) {
     if (!validCaktoSignature(raw, timestamp, signature, config.CAKTO_WEBHOOK_SECRET)) throw new UnauthorizedException('Assinatura Cakto inválida');
@@ -55,12 +67,50 @@ export class CaktoService {
     return { received: true };
   }
 
-  private async applyOrder(event: string, item: z.infer<typeof order>) {
+  async reconcile() {
+    if (!config.CAKTO_CLIENT_ID || !config.CAKTO_CLIENT_SECRET || !config.CAKTO_PRODUCT_ID) throw new ServiceUnavailableException('API Cakto não configurada');
+    await this.db.syncLease.upsert({where:{scope:'CAKTO_RECONCILE'},create:{scope:'CAKTO_RECONCILE',lockedUntil:new Date(0)},update:{}});
+    let lockedUntil = new Date(Date.now()+30*60_000);
+    const lease = await this.db.syncLease.updateMany({where:{scope:'CAKTO_RECONCILE',lockedUntil:{lt:new Date()}},data:{lockedUntil}});
+    if (!lease.count) throw new ConflictException('Conciliação Cakto já em andamento');
+    let run: {id:string}|undefined;
+    let seen=0,processed=0,skipped=0,failed=0;
+    const failedIds:string[]=[];
+    try {
+      run=await this.db.syncRun.create({data:{scope:'CAKTO_ORDERS'}});
+      for await (const raw of this.api.orders(config.CAKTO_PRODUCT_ID)) {
+        seen++;
+        if (seen % 100 === 0) {
+          const next = new Date(Date.now()+30*60_000);
+          const extended = await this.db.syncLease.updateMany({where:{scope:'CAKTO_RECONCILE',lockedUntil},data:{lockedUntil:next}});
+          if (!extended.count) throw new ConflictException('Conciliação Cakto perdeu o bloqueio');
+          lockedUntil = next;
+        }
+        const parsed=order.safeParse(raw);
+        if (!parsed.success) { failed++; continue; }
+        const item=parsed.data;
+        if (item.product.id !== config.CAKTO_PRODUCT_ID || item.offer_type && item.offer_type !== 'main') { skipped++; continue; }
+        const event=item.status==='paid'?'purchase_approved':item.status==='refunded'?'refund':item.status==='chargedback'?'chargeback':'purchase_refused';
+        try { await this.applyOrder(event,item,true); processed++; }
+        catch { failed++; if (failedIds.length < 5) failedIds.push(item.id); }
+      }
+      const result=`${seen} consultados; ${processed} processados; ${skipped} ignorados; ${failed} com falha`;
+      await this.db.syncRun.update({where:{id:run.id},data:{finishedAt:new Date(),result,error:failed?`${failed} pedidos exigem conferência na Cakto${failedIds.length ? `; IDs: ${failedIds.join(', ')}` : ''}`.slice(0,500):null}});
+      return {seen,processed,skipped,failed};
+    } catch(error) {
+      if (run) await this.db.syncRun.update({where:{id:run.id},data:{finishedAt:new Date(),error:error instanceof Error?error.message.slice(0,200):'Falha Cakto'}});
+      throw error;
+    } finally {
+      await this.db.syncLease.updateMany({where:{scope:'CAKTO_RECONCILE',lockedUntil},data:{lockedUntil:new Date(0)}});
+    }
+  }
+
+  private async applyOrder(event: string, item: z.infer<typeof order>, fromApi=false) {
     if (item.product.id !== config.CAKTO_PRODUCT_ID || item.offer_type && item.offer_type !== 'main') return;
     const cpf = digits(item.customer.docNumber);
     const phone = digits(item.customer.phone);
     const approved = positive.has(event) && item.status === 'paid' && !!date(item.paidAt);
-    const subscriptionId = item.subscription?.id == null ? null : String(item.subscription.id);
+    const subscriptionId = item.subscription == null ? null : typeof item.subscription === 'object' ? String(item.subscription.id) : String(item.subscription);
     if (approved && (!validCpf(cpf) || phone.length < 10 || !subscriptionId)) throw new BadRequestException('Pagamento Cakto sem CPF válido, telefone ou assinatura');
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -83,9 +133,12 @@ export class CaktoService {
           if (subscriptionId && membership.caktoSubscriptionId && membership.caktoSubscriptionId !== subscriptionId) throw new BadRequestException('Assinatura Cakto diverge da afiliada');
           const status = event === 'refund' ? 'refunded' : event === 'chargeback' ? 'chargedback' : item.status;
           const existing = await tx.caktoOrder.findUnique({ where: { orderId: item.id } });
-          const nextStatus = existing?.status === 'paid' && !['refund', 'chargeback'].includes(event) ? 'paid' : status;
-          await tx.caktoOrder.upsert({ where: { orderId: item.id }, create: { orderId: item.id, membershipId: membership.id, customerId: String(item.customer.id), productId: item.product.id, status: nextStatus, event, amountCents: Math.round((item.amount || 0) * 100), paymentMethod: item.paymentMethod || 'unknown', competence: date(item.due_date || item.paidAt)?.toISOString().slice(0, 7) || null, paidAt: date(item.paidAt) }, update: { status: nextStatus, event, paidAt: date(item.paidAt) } });
-          if (subscriptionId) await tx.membership.update({ where: { id: membership.id }, data: { caktoSubscriptionId: subscriptionId, caktoSubscriptionStatus: event === 'subscription_canceled' ? 'canceled' : event === 'subscription_paused' ? 'paused' : event === 'subscription_late' || event === 'subscription_renewal_refused' ? 'late' : positive.has(event) ? 'active' : membership.caktoSubscriptionStatus } });
+          const keepExisting = existing && ((['refunded', 'chargedback'].includes(existing.status) && !['refund', 'chargeback'].includes(event)) || (existing.status === 'paid' && !['refund', 'chargeback'].includes(event) && status !== 'paid'));
+          const nextStatus = keepExisting ? existing.status : status;
+          const nextEvent = keepExisting ? existing.event : event;
+          const paidAt = keepExisting ? existing.paidAt : date(item.paidAt);
+          await tx.caktoOrder.upsert({ where: { orderId: item.id }, create: { orderId: item.id, membershipId: membership.id, customerId: String(item.customer.id ?? `cpf:${cpf}`), productId: item.product.id, status: nextStatus, event:nextEvent, amountCents: Math.round((item.amount || 0) * 100), paymentMethod: item.paymentMethod || 'unknown', competence: date(item.due_date || item.paidAt)?.toISOString().slice(0, 7) || null, paidAt }, update: { status: nextStatus, event:nextEvent, paidAt } });
+          if (subscriptionId && !fromApi) await tx.membership.update({ where: { id: membership.id }, data: { caktoSubscriptionId: subscriptionId, caktoSubscriptionStatus: event === 'subscription_canceled' ? 'canceled' : event === 'subscription_paused' ? 'paused' : event === 'subscription_late' || event === 'subscription_renewal_refused' ? 'late' : positive.has(event) ? 'active' : membership.caktoSubscriptionStatus } });
         }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
         return;
       } catch (error) {

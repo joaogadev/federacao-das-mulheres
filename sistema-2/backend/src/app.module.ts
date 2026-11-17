@@ -6,6 +6,7 @@ import { WebhookController } from './webhook.controller';
 import { AsaasClient } from './asaas.client';
 import { AsaasService } from './asaas.service';
 import { CaktoService } from './cakto.service';
+import { CaktoClient } from './cakto.client';
 import {
   DocumentsController,
   DocumentUploadGuard,
@@ -26,6 +27,7 @@ import { ScansController } from './scans.controller';
     AsaasClient,
     AsaasService,
     CaktoService,
+    CaktoClient,
     DocumentUploadGuard,
   ],
 })

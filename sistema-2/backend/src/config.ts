@@ -17,6 +17,9 @@ const schema = z
     ASAAS_DONATION_LINK_ID: z.string().default(''),
     CAKTO_WEBHOOK_SECRET: z.string().default(''),
     CAKTO_PRODUCT_ID: z.string().default(''),
+    CAKTO_CLIENT_ID: z.string().default(''),
+    CAKTO_CLIENT_SECRET: z.string().default(''),
+    CAKTO_RECONCILE_INTERVAL_MINUTES: z.coerce.number().int().min(15).default(60),
     RECONCILE_INTERVAL_MINUTES: z.coerce.number().int().min(15).default(60),
   })
   .superRefine((v, ctx) => {
@@ -38,10 +41,10 @@ const schema = z
           'FRONTEND_ORIGIN must be an origin without path or trailing slash',
       });
     if (v.NODE_ENV === 'production') {
-      if (v.CAKTO_WEBHOOK_SECRET.length < 32 || !v.CAKTO_PRODUCT_ID)
+      if (v.CAKTO_WEBHOOK_SECRET.length < 32 || !v.CAKTO_PRODUCT_ID || !v.CAKTO_CLIENT_ID || !v.CAKTO_CLIENT_SECRET)
         ctx.addIssue({
           code: 'custom',
-          message: 'Cakto webhook secret and product ID required in production',
+          message: 'Cakto webhook secret, product ID and read API credentials required in production',
         });
       if (v.COOKIE_SECURE !== 'true')
         ctx.addIssue({

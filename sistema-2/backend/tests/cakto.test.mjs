@@ -6,6 +6,8 @@ process.env.DATABASE_URL ||= 'postgresql://user:pass@localhost:5432/test';
 process.env.FRONTEND_ORIGIN ||= 'http://localhost:5173';
 process.env.CAKTO_WEBHOOK_SECRET = 'cakto-fixture-secret-with-more-than-32-characters';
 process.env.CAKTO_PRODUCT_ID = 'product-fixture';
+process.env.CAKTO_CLIENT_ID = 'client-fixture';
+process.env.CAKTO_CLIENT_SECRET = 'secret-fixture';
 
 const { CaktoService, validCaktoSignature } = await import('../src/cakto.service.ts');
 const { validCpf } = await import('../src/cpf.ts');
@@ -49,4 +51,27 @@ test('primeiro pagamento cria uma afiliada e reentrega não duplica o cadastro',
   assert.equal(membership.status,'APROVADA');
   assert.equal(savedOrder.amountCents,3000);
   assert.equal(savedOrder.status,'paid');
+});
+
+test('GET da Cakto concilia pedido pago sem ID do cliente e com valor em texto', async () => {
+  let membership=null, savedOrder=null, membershipsCreated=0, lastRun;
+  const tx={
+    person:{findMany:async()=>[],create:async({data})=>({id:'person-2',...data})},
+    membership:{findUnique:async({where})=>membership && (where.id===membership.id || where.caktoSubscriptionId===membership.caktoSubscriptionId)?membership:null,findFirst:async()=>null,create:async({data})=>{membershipsCreated++; membership={id:'membership-2',...data};return membership},update:async({data})=>{membership={...membership,...data};return membership}},
+    caktoOrder:{findUnique:async()=>savedOrder,upsert:async({create,update})=>{savedOrder=savedOrder?{...savedOrder,...update}:create;return savedOrder}},
+  };
+  const db={
+    syncLease:{upsert:async()=>{},updateMany:async()=>({count:1})},
+    syncRun:{create:async()=>({id:'run-1'}),update:async({data})=>{lastRun=data}},
+    $transaction:async fn=>fn(tx),
+  };
+  const getOrder={...body.data,id:'order-get',amount:'30.00',customer:{name:'Maria',phone:'79999999999',docNumber:'12345678909'},subscription:'subscription-get'};
+  const api={orders:async function*(){yield getOrder}};
+  const service=new CaktoService(db,api);
+  assert.deepEqual(await service.reconcile(),{seen:1,processed:1,skipped:0,failed:0});
+  assert.deepEqual(await service.reconcile(),{seen:1,processed:1,skipped:0,failed:0});
+  assert.equal(membershipsCreated,1);
+  assert.equal(savedOrder.amountCents,3000);
+  assert.equal(savedOrder.customerId,'cpf:12345678909');
+  assert.match(lastRun.result,/1 processados/);
 });
