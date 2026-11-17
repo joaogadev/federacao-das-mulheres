@@ -41,10 +41,10 @@ const schema = z
           'FRONTEND_ORIGIN must be an origin without path or trailing slash',
       });
     if (v.NODE_ENV === 'production') {
-      if (v.CAKTO_WEBHOOK_SECRET.length < 32 || !v.CAKTO_PRODUCT_ID || !v.CAKTO_CLIENT_ID || !v.CAKTO_CLIENT_SECRET)
+      if ((v.CAKTO_WEBHOOK_SECRET && v.CAKTO_WEBHOOK_SECRET.length < 32) || !v.CAKTO_PRODUCT_ID || !v.CAKTO_CLIENT_ID || !v.CAKTO_CLIENT_SECRET)
         ctx.addIssue({
           code: 'custom',
-          message: 'Cakto webhook secret, product ID and read API credentials required in production',
+          message: 'Cakto product ID and read API credentials required in production; webhook secret must have at least 32 characters when set',
         });
       if (v.COOKIE_SECURE !== 'true')
         ctx.addIssue({
