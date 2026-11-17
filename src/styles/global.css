@@ -239,6 +239,11 @@ img {
   color: #fff;
 }
 
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .button-outline {
   background: transparent;
   color: var(--plum);
@@ -674,6 +679,18 @@ img {
 .empty-state {
   background: var(--cream);
   padding: 25px;
+}
+
+.unavailable {
+  background: var(--cream);
+  border-left: 4px solid var(--plum);
+  padding: 18px;
+}
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 28px;
 }
 
 .cta-band {

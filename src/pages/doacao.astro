@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import { hostedAsaasLink, publicHttpsLink } from '../lib/asaas-links';
+const link = hostedAsaasLink(import.meta.env.PUBLIC_ASAAS_DONATION_URL);
+const privacy = publicHttpsLink(import.meta.env.PUBLIC_PRIVACY_URL);
+---
+
+<BaseLayout title="Faça uma doação">
+  <PageHeader
+    eyebrow="Apoie"
+    title="Faça uma doação"
+    description="Apoie as ações da Federação das Mulheres."
+  />
+  <section class="section">
+    <div class="container narrow prose">
+      <p>
+        A doação é avulsa e pode ser paga por Pix na página hospedada pelo
+        Asaas. Doar não cria filiação, aprovação institucional nem mensalidade.
+        Consulte o valor disponível na página de pagamento antes de confirmar.
+      </p>
+      {
+        link ? (
+          <a class="button" href={link} rel="noopener noreferrer">
+            Fazer uma doação
+          </a>
+        ) : (
+          <>
+            <button class="button" type="button" disabled>
+              Fazer uma doação
+            </button>
+            <p class="unavailable" role="status">
+              A doação online está temporariamente indisponível. O link de
+              pagamento ainda não foi configurado e validado.
+            </p>
+          </>
+        )
+      }
+      {
+        privacy ? (
+          <p>
+            <a href={privacy}>Política de privacidade</a>
+          </p>
+        ) : (
+          <p>Política de privacidade ainda não publicada.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
