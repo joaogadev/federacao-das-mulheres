@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+dist
+.astro
+.cache
+.sanity
+studio/node_modules
+studio/.sanity
+migration/output
