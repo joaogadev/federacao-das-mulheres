@@ -1,6 +1,6 @@
 # Federação das Mulheres — site institucional e administrativo
 
-O repositório contém o site institucional Astro (Sistema 1) e uma implementação própria do painel administrativo React, API NestJS e PostgreSQL (Sistema 2) em `sistema-2/`. Nesta branch, a filiação está sendo avaliada com checkout hospedado Cakto, sem backend no site. O Sistema 2 permanece até a homologação da substituição. Veja [VIABILIDADE_PIX_AUTOMATICO.md](VIABILIDADE_PIX_AUTOMATICO.md) e [ARQUITETURA_NO_SYSTEM_2.md](ARQUITETURA_NO_SYSTEM_2.md).
+O repositório contém o site institucional Astro (Sistema 1) e o painel administrativo React, API NestJS e PostgreSQL (Sistema 2) em `sistema-2/`. A Federação decidiu manter o Sistema 2 para digitalização de documentos, cadastro das afiliadas e conferência das mensalidades anteriores à Cakto. A filiação pública usa o checkout Cakto. O cadastro automático por webhook e o fluxo manual estão descritos em [INTEGRACAO_CAKTO.md](sistema-2/INTEGRACAO_CAKTO.md); os documentos de arquitetura sem Sistema 2 registram a alternativa anteriormente avaliada.
 
 A página **Quero me afiliar** usa um checkout Cakto em modo de avaliação local. A página **Faça uma doação** gera QR Code a partir de um Pix estático validado; os valores de R$ 5 e o Pix pessoal existem somente no `.env` local de demonstração. Em produção, os dados de filiação e doação vêm do Sanity. O Studio Sanity foi atualizado; o site desta branch ainda não foi publicado no Cloudflare por esta entrega.
 
