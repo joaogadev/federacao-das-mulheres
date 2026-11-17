@@ -18,6 +18,13 @@ enum MembershipStatus {
   REPROVADA
 }
 
+enum MembershipSource {
+  ASAAS
+  CAKTO
+  MANUAL
+  MISTA
+}
+
 enum OriginKind {
   AFFILIATION
   DONATION
@@ -48,6 +55,7 @@ model AdminUser {
   uploadedDocuments DocumentRecord[]  @relation("DocumentUploader")
   reviewedDocuments DocumentRecord[]  @relation("DocumentReviewer")
   scannedDocuments  ScannedDocument[]
+  verifiedMonths ManualMonth[]
 }
 
 model ScannedDocument {
@@ -149,12 +157,52 @@ model Membership {
   id            String           @id @default(uuid()) @db.Uuid
   personId      String           @db.Uuid
   status        MembershipStatus @default(PENDENTE)
+  source        MembershipSource @default(ASAAS)
+  caktoSubscriptionId String?    @unique
+  caktoSubscriptionStatus String?
   createdAt     DateTime         @default(now()) @db.Timestamptz(3)
   decidedAt     DateTime?        @db.Timestamptz(3)
   person        Person           @relation(fields: [personId], references: [id])
   subscriptions Subscription[]
+  caktoOrders CaktoOrder[]
+  manualMonths ManualMonth[]
 
   @@index([personId, status])
+}
+
+model CaktoOrder {
+  id String @id @default(uuid()) @db.Uuid
+  orderId String @unique
+  membershipId String @db.Uuid
+  customerId String
+  productId String
+  status String
+  event String
+  amountCents Int
+  paymentMethod String
+  competence String?
+  paidAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  membership Membership @relation(fields: [membershipId], references: [id])
+
+  @@index([membershipId, paidAt])
+}
+
+model ManualMonth {
+  id String @id @default(uuid()) @db.Uuid
+  membershipId String @db.Uuid
+  competence String
+  paid Boolean
+  amountCents Int?
+  paidAt DateTime? @db.Date
+  note String?
+  verifiedById String @db.Uuid
+  verifiedAt DateTime @default(now()) @db.Timestamptz(3)
+  membership Membership @relation(fields: [membershipId], references: [id])
+  verifiedBy AdminUser @relation(fields: [verifiedById], references: [id])
+
+  @@unique([membershipId, competence])
 }
 
 model Subscription {

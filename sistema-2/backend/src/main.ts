@@ -7,7 +7,7 @@ import { AppModule } from './app.module';
 import { allowedFrontendOrigins, config } from './config';
 
 export async function bootstrap(listen = true) {
-  const app = await NestFactory.create(AppModule, { bodyParser: true });
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({
