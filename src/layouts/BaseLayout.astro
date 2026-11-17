@@ -33,9 +33,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{pageTitle}</title>
+    <slot name="head" />
   </head>
   <body>
     <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+    {
+      process.env.CONTENT_SOURCE === 'demo' && (
+        <div class="demo-banner" role="status">
+          Prévia local com conteúdo fictício. Edições no Sanity não aparecem
+          nesta versão.
+        </div>
+      )
+    }
     <SiteHeader currentPath={Astro.url.pathname} />
     <main id="conteudo"><slot /></main>
     <SiteFooter />

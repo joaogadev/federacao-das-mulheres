@@ -6,6 +6,7 @@ const studioUrl = getStudioUrl();
 ---
 
 <BaseLayout title="Painel editorial" noindex>
+  <meta slot="head" http-equiv="refresh" content={`0;url=${studioUrl}`} />
   <PageHeader
     eyebrow="Conteúdo institucional"
     title="Painel editorial"
@@ -13,24 +14,13 @@ const studioUrl = getStudioUrl();
   />
   <section class="section">
     <div class="container narrow">
-      {
-        studioUrl ? (
-          <>
-            <p>
-              Acesse o painel e entre com sua conta individual para atualizar os
-              conteúdos da Federação.
-            </p>
-            <a class="button" href={studioUrl} rel="noopener noreferrer">
-              Acessar o Sanity Studio ↗
-            </a>
-          </>
-        ) : (
-          <p>
-            O painel editorial ainda não está disponível. Entre em contato com a
-            pessoa responsável pelo site.
-          </p>
-        )
-      }
+      <p>
+        Redirecionando ao Sanity Studio. Entre com sua conta individual para
+        atualizar os conteúdos da Federação.
+      </p>
+      <a class="button" href={studioUrl} rel="noopener noreferrer">
+        Acessar o Sanity Studio ↗
+      </a>
     </div>
   </section>
 </BaseLayout>

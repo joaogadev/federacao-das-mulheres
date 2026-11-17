@@ -65,9 +65,10 @@ export async function getSite() {
   return (await getContent()).site;
 }
 
-export function getStudioUrl(): string | undefined {
-  const value = import.meta.env.PUBLIC_SANITY_STUDIO_URL;
-  if (!value) return undefined;
+export function getStudioUrl(): string {
+  const value =
+    import.meta.env.PUBLIC_SANITY_STUDIO_URL ||
+    'https://federacao-mulheres-se.sanity.studio/';
   const url = new URL(value);
   if (url.protocol !== 'https:')
     throw new Error('PUBLIC_SANITY_STUDIO_URL deve usar HTTPS.');
