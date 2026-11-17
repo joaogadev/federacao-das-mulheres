@@ -7,7 +7,7 @@ const schema = z
       .default('development'),
     PORT: z.coerce.number().int().min(1).max(65535).default(3001),
     DATABASE_URL: z.string().startsWith('postgresql://'),
-    FRONTEND_ORIGIN: z.string().url(),
+    FRONTEND_ORIGIN: z.union([z.literal(''), z.string().url()]).default(''),
     COOKIE_SECURE: z.enum(['true', 'false']).default('false'),
     COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),
     ASAAS_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
@@ -33,8 +33,8 @@ const schema = z
         code: 'custom',
         message: 'ASAAS_WEBHOOK_TOKEN must have 32–255 non-space characters',
       });
-    const origin = new URL(v.FRONTEND_ORIGIN);
-    if (origin.origin !== v.FRONTEND_ORIGIN)
+    const origin = v.FRONTEND_ORIGIN ? new URL(v.FRONTEND_ORIGIN) : null;
+    if (origin && origin.origin !== v.FRONTEND_ORIGIN)
       ctx.addIssue({
         code: 'custom',
         message:
@@ -51,7 +51,7 @@ const schema = z
           code: 'custom',
           message: 'COOKIE_SECURE must be true in production',
         });
-      if (!v.FRONTEND_ORIGIN.startsWith('https://'))
+      if (v.FRONTEND_ORIGIN && !v.FRONTEND_ORIGIN.startsWith('https://'))
         ctx.addIssue({
           code: 'custom',
           message: 'HTTPS frontend required in production',
@@ -74,12 +74,12 @@ const schema = z
 
 export const config = schema.parse(process.env);
 
-const frontend = new URL(config.FRONTEND_ORIGIN);
+const frontend = config.FRONTEND_ORIGIN ? new URL(config.FRONTEND_ORIGIN) : null;
 export const allowedFrontendOrigins =
-  config.NODE_ENV === 'development' &&
+  frontend && config.NODE_ENV === 'development' &&
   ['localhost', '127.0.0.1'].includes(frontend.hostname)
     ? [
         `${frontend.protocol}//localhost:${frontend.port}`,
         `${frontend.protocol}//127.0.0.1:${frontend.port}`,
       ]
-    : [config.FRONTEND_ORIGIN];
+    : config.FRONTEND_ORIGIN ? [config.FRONTEND_ORIGIN] : [];
