@@ -40,6 +40,18 @@ npm run dev:demo
 
 Abra `http://localhost:4321/`. Esse modo usa exclusivamente o acervo fictício preservado, tem `noindex` e não fala com o Sanity. Para verificar a geração estática:
 
+### Executar com Docker
+
+Com Docker e Docker Compose instalados, execute na raiz do projeto:
+
+```bash
+docker compose up --build
+```
+
+Abra `http://localhost:4321/`. O container inicia o mesmo modo de demonstração, sem precisar configurar `.env` nem instalar Node.js na máquina. Encerre com `Ctrl+C` (ou execute `docker compose down`). **O conteúdo é fictício: não use esse modo nem a imagem resultante em produção.**
+
+Para verificar a geração estática:
+
 ```bash
 npm run build:demo
 node scripts/verify-build.mjs
