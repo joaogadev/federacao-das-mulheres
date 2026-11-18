@@ -1,6 +1,6 @@
 # 02 — Execução local
 
-Pré-requisitos: Node 22.14 (indicado em `.node-version`), npm, Docker com daemon ativo e Docker Compose. Existem três instalações separadas; nenhum workspace foi imposto ao site institucional. Portas: Astro `4321`, Sanity Studio `3333`, API `3001`, painel `5173`, PostgreSQL `5432` somente no computador local.
+Pré-requisitos: Node 22.14 (indicado em `.node-version`), npm, Docker com daemon ativo e Docker Compose. Existem três instalações separadas; nenhum workspace foi imposto ao site institucional. Portas: Astro `4321`, Sanity Studio `3333`, API `3001`, painel `5173`, PostgreSQL `5433` somente no computador local. Se `5433` estiver ocupada, escolha outra porta livre e altere `POSTGRES_PORT` nos dois `.env` do Sistema 2.
 
 ## Windows PowerShell
 
@@ -13,7 +13,7 @@ Copy-Item sistema-2/backend/.env.example sistema-2/backend/.env
 Copy-Item sistema-2/frontend/.env.example sistema-2/frontend/.env
 ```
 
-Escolha uma senha local forte para `POSTGRES_PASSWORD` em `sistema-2/.env` e use a mesma senha na URL codificada de `DATABASE_URL` do backend antes de iniciar o banco. O Compose espera a senha explicitamente. Em seguida:
+Escolha uma senha local forte para `POSTGRES_PASSWORD` em `sistema-2/.env` e coloque a mesma senha em `sistema-2/backend/.env`. Defina `POSTGRES_PORT=5433` nos dois arquivos. Os scripts do backend montam `DATABASE_URL` em memória, codificando a senha automaticamente; não é preciso escrevê-la na URL. O Compose espera a senha explicitamente. Em seguida:
 
 ```powershell
 npm ci
@@ -58,6 +58,6 @@ npm --prefix sistema-2/backend run admin:create
 unset ADMIN_EMAIL ADMIN_PASSWORD
 ```
 
-O NestJS carrega `sistema-2/backend/.env` por `node --env-file`; execute os scripts a partir do diretório do backend via `npm --prefix`. `db:migrate` aplica migrações versionadas sem reset. Para criar uma migração nova em desenvolvimento, edite `prisma/schema.prisma` e execute `npm --prefix sistema-2/backend run db:migrate:dev`; revise o SQL antes de aplicar. Em produção faça backup, aplique `db:migrate` e valide contagens/saúde; não há rollback automático de migrações com dados. Restaure backup ou produza uma migração corretiva se necessário.
+O NestJS carrega `sistema-2/backend/.env` por `node --env-file`; execute os scripts a partir do diretório do backend via `npm --prefix`. O wrapper de execução monta `DATABASE_URL` para o NestJS, Prisma CLI e scripts administrativos. Se outro ambiente já fornece uma `DATABASE_URL` completa, ela continua aceita. `db:migrate` aplica migrações versionadas sem reset. Para criar uma migração nova em desenvolvimento, edite `prisma/schema.prisma` e execute `npm --prefix sistema-2/backend run db:migrate:dev`; revise o SQL antes de aplicar. Em produção faça backup, aplique `db:migrate` e valide contagens/saúde; não há rollback automático de migrações com dados. Restaure backup ou produza uma migração corretiva se necessário.
 
 Nesta entrega, o Docker local não estava ativo. Para conferir a migração sem alterar uma instância existente, foi iniciado um PostgreSQL 18 isolado em `sistema-2/.local-pg/` (fora do Git), aplicada a migração `20261030_init` em banco vazio e repetido `db:migrate`, que informou “No pending migrations to apply”. O roteiro padrão com Docker Compose ainda precisa ser executado onde o daemon estiver disponível.

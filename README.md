@@ -1,6 +1,6 @@
 # Federação das Mulheres — site institucional e administrativo
 
-O repositório contém o site institucional Astro (Sistema 1) e uma implementação própria do painel administrativo React, API NestJS e PostgreSQL (Sistema 2) em `sistema-2/`. A conexão financeira passa pelos links hospedados, API e webhooks do Asaas. Veja o [índice da integração](docs/integracao/README.md), especialmente [execução local](docs/integracao/02-execucao-local.md) e [como substituir o Sistema 2](docs/integracao/05-substituir-sistema-2.md).
+O repositório contém o site institucional Astro (Sistema 1) e uma implementação própria do painel administrativo React, API NestJS e PostgreSQL (Sistema 2) em `sistema-2/`. A conexão financeira passa pelos links hospedados, API e webhooks do Asaas. A primeira cobrança confirmada cria a filiação no Sistema 2 com nome, telefone e e-mail obtidos do cliente Asaas. Veja o [índice da integração](docs/integracao/README.md), especialmente [execução local](docs/integracao/02-execucao-local.md), [ativação do Asaas](docs/integracao/09-asaas-filiação.md) e [como substituir o Sistema 2](docs/integracao/05-substituir-sistema-2.md).
 
 As páginas **Quero me afiliar** e **Faça uma doação** usam URLs públicas de links Asaas independentes. Sem link válido, mostram indisponibilidade. A combinação de Link de Pagamento recorrente com Pix ainda precisa de teste na conta Sandbox antes de ativar filiação. Nenhuma operação financeira real ou deploy foi feito nesta entrega.
 
