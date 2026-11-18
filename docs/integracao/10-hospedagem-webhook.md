@@ -30,6 +30,16 @@ Referências: [receber webhooks no Sandbox](https://docs.asaas.com/docs/receba-e
 
 Referências: [monorepo](https://docs.railway.com/deployments/monorepo), [PostgreSQL](https://docs.railway.com/databases/postgresql), [variáveis de referência](https://docs.railway.com/variables/reference), [pre-deploy](https://docs.railway.com/deployments/pre-deploy-command) e [domínio público](https://docs.railway.com/networking/public-networking).
 
+## Railway: painel do Sistema 2
+
+1. No **mesmo projeto Railway** da API e do PostgreSQL, adicione outro serviço **GitHub Repo** com o mesmo repositório e a branch `features/sistema-2-asaas`. Defina **Root Directory** como `/sistema-2/frontend`.
+2. Defina **Build Command** como `npm ci --include=dev && npm run build` e **Start Command** como `npm start`. O script `start` serve os arquivos de `dist` na porta fornecida pelo Railway, com fallback para 3000 fora da plataforma. Não configure migração nesse serviço.
+3. Em **Variables** do painel, configure `VITE_API_URL=https://DOMINIO-DA-API.up.railway.app`, usando o domínio HTTPS público real da API, sem barra final. Essa variável é incorporada ao build: alterações exigem novo deploy do painel. Nunca coloque chave Asaas, senha ou `DATABASE_URL` no frontend.
+4. Em **Settings → Networking → Public Networking**, gere o domínio HTTPS do painel. Abra a URL e confirme que a tela de login aparece.
+5. No serviço **da API**, mude `FRONTEND_ORIGIN` para a origem HTTPS exata do painel, sem barra final, e configure `COOKIE_SECURE=true` e `COOKIE_SAME_SITE=none`. Aplique as mudanças com **Deploy**. Faça login no painel; se houver falha, confira CORS e cookies em `GET /auth/me` no navegador.
+
+Referências: [deploy de Vite](https://docs.railway.com/deployments/troubleshooting/no-start-command-could-be-found), [comandos de build e start](https://docs.railway.com/builds/build-and-start-commands) e [domínio público](https://docs.railway.com/networking/public-networking).
+
 ## Render: backend, PostgreSQL e painel estático
 
 1. Crie um **Render Postgres** na região desejada. Guarde a **Internal Database URL** para o backend na mesma região. O plano Free serve apenas para testes: o banco Free expira em 30 dias.

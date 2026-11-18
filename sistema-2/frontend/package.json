@@ -8,6 +8,7 @@
     "dev": "vite --host 127.0.0.1",
     "prebuild": "node scripts/copy-ocr-assets.mjs",
     "build": "tsc -b && vite build",
+    "start": "serve --single --listen ${PORT:-3000} dist",
     "pretest": "npm run build",
     "check": "tsc --noEmit",
     "lint": "tsc --noEmit",
@@ -19,6 +20,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "serve": "^14.2.8",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
