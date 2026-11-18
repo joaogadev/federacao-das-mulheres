@@ -76,7 +76,7 @@ Não publique `dist/` gerado pela demonstração. O modo é bloqueado em CI e Cl
 | `SITE_URL`                     | `.env` e Cloudflare             | URL HTTPS definitiva, usada nos links canônicos                |
 | `PUBLIC_SANITY_STUDIO_URL`     | `.env` e Cloudflare             | URL HTTPS do Studio hospedado                                  |
 | `PUBLIC_ASAAS_AFFILIATION_URL` | `.env` e Cloudflare             | Link recorrente validado para filiação                         |
-| `PUBLIC_ASAAS_DONATION_URL`    | `.env` e Cloudflare             | Fallback para o link avulso Pix; o link publicado no Sanity é prioritário |
+| `PUBLIC_ASAAS_DONATION_URL`    | `.env` e Cloudflare             | Fallback para o link avulso Pix; o link do Sanity é prioritário e deve ser diferente do link de filiação |
 | `PUBLIC_PRIVACY_URL`           | `.env` e Cloudflare             | Política de privacidade publicada                              |
 | `PUBLIC_AFFILIATION_TERMS_URL` | `.env` e Cloudflare             | Termos de filiação publicados                                  |
 | `SANITY_STUDIO_PROJECT_ID`     | `studio/.env`                   | Mesmo projeto do frontend                                      |

@@ -7,6 +7,8 @@ const site = await getSite();
 const link = donationPaymentLink(
   site.donationUrl,
   import.meta.env.PUBLIC_ASAAS_DONATION_URL,
+  site.affiliationCheckoutUrl ??
+    import.meta.env.PUBLIC_ASAAS_AFFILIATION_URL,
 );
 const privacy = publicHttpsLink(import.meta.env.PUBLIC_PRIVACY_URL);
 ---

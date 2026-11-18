@@ -32,6 +32,7 @@ test('doação prioriza o link Asaas publicado e usa o valor de build como fallb
     donationPaymentLink(
       'https://www.asaas.com/c/publicado',
       'https://www.asaas.com/c/build',
+      'https://www.asaas.com/c/afiliacao',
     ),
     'https://www.asaas.com/c/publicado',
   );
@@ -39,7 +40,24 @@ test('doação prioriza o link Asaas publicado e usa o valor de build como fallb
     donationPaymentLink(
       'https://example.org/doacao',
       'https://www.asaas.com/c/build',
+      'https://www.asaas.com/c/afiliacao',
     ),
     'https://www.asaas.com/c/build',
+  );
+  assert.equal(
+    donationPaymentLink(
+      'https://www.asaas.com/c/afiliacao',
+      'https://www.asaas.com/c/build',
+      'https://www.asaas.com/c/afiliacao',
+    ),
+    'https://www.asaas.com/c/build',
+  );
+  assert.equal(
+    donationPaymentLink(
+      'https://www.asaas.com/c/afiliacao',
+      'https://www.asaas.com/c/afiliacao',
+      'https://www.asaas.com/c/afiliacao',
+    ),
+    null,
   );
 });

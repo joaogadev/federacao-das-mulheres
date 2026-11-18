@@ -20,8 +20,14 @@ export function hostedAsaasLink(value: string | undefined): string | null {
 export function donationPaymentLink(
   institutionalUrl: string | undefined,
   buildUrl: string | undefined,
+  affiliationUrl: string | undefined,
 ): string | null {
-  return hostedAsaasLink(institutionalUrl) ?? hostedAsaasLink(buildUrl);
+  const affiliation = hostedAsaasLink(affiliationUrl);
+  for (const candidate of [institutionalUrl, buildUrl]) {
+    const donation = hostedAsaasLink(candidate);
+    if (donation && donation !== affiliation) return donation;
+  }
+  return null;
 }
 
 export function publicHttpsLink(value: string | undefined): string | null {
