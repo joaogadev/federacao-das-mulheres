@@ -87,6 +87,16 @@ export const siteSchema = z.object({
   facebook: webUrl,
   donationUrl: webUrl,
   affiliationCheckoutUrl: webUrl.nullish(),
+  privacyUrl: webUrl.nullish(),
+  affiliationTermsUrl: webUrl.nullish(),
+  affiliationMonthlyAmount: z.number().positive().nullish(),
+  affiliationDescription: text.nullish(),
+  affiliationBenefits: z.array(text).nullish(),
+  affiliationPixInstructions: text.nullish(),
+  affiliationCancellationInstructions: text.nullish(),
+  donationDescription: text.nullish(),
+  donationInstructions: text.nullish(),
+  donationPixCode: text.nullish(),
 });
 export const contentSchema = z
   .object({
