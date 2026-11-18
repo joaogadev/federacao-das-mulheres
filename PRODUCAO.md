@@ -20,7 +20,7 @@ O Studio não expõe tokens. Os campos institucionais são agrupados e há uma e
 
 ### Bloqueio de build e deploy por integração
 
-O workflow `.github/workflows/deploy.yml` executa nesta ordem: consulta publicada ao Sanity e validação do contrato (`npm run test:integration:cms`), build de produção (`npm run build`) e deploy do Worker somente em push para `main`. Falha ou indisponibilidade do Sanity interrompe o workflow antes do build; falha de build impede o deploy. Pull requests e pushes em branches `features/**` validam integração e build, sem publicar o Worker de produção.
+O workflow `.github/workflows/deploy.yml` executa nesta ordem: consulta publicada ao Sanity e validação do contrato (`npm run test:integration:cms`), build estático (`npm run build`) e deploy. Falha ou indisponibilidade do Sanity interrompe o workflow antes do build; falha de build impede o deploy. Pushes em `main` publicam o Worker de produção. Pushes ou execuções manuais em `features/**` publicam no Worker separado `federacao-das-mulheres-preview`; pull requests validam integração e build, sem deploy.
 
 Configure `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`, `PUBLIC_SANITY_STUDIO_URL`, `PUBLIC_ASAAS_AFFILIATION_URL`, `PUBLIC_ASAAS_DONATION_URL`, `PUBLIC_PRIVACY_URL`, `PUBLIC_AFFILIATION_TERMS_URL` e `CLOUDFLARE_ACCOUNT_ID` em Actions Variables ou Actions Secrets. O workflow aceita ambos, com preferência para Variables. Cadastre `CLOUDFLARE_API_TOKEN` como secret com escopo mínimo para publicar esse Worker. Sem esses valores, os jobs falham fechados.
 

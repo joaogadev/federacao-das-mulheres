@@ -29,7 +29,7 @@ jobs:
           SANITY_DATASET: ${{ vars.SANITY_DATASET || secrets.SANITY_DATASET }}
 
   build:
-    name: Production build
+    name: Build static site
     needs: integration
     runs-on: ubuntu-latest
     steps:
@@ -56,11 +56,11 @@ jobs:
           if-no-files-found: error
 
   deploy:
-    name: Deploy Cloudflare Worker
+    name: Deploy Cloudflare Worker (${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }})
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/features/'))
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -73,7 +73,12 @@ jobs:
           name: site-dist
           path: dist/
       - name: Deploy static assets to Workers
-        run: npx wrangler@latest deploy
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            npx wrangler@latest deploy
+          else
+            npx wrangler@latest deploy --name federacao-das-mulheres-preview
+          fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
