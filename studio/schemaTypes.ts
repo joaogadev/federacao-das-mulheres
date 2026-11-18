@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from 'sanity';
-import { hostedCaktoCheckout } from '../src/lib/cakto-link';
+import { hostedAsaasLink } from '../src/lib/asaas-links';
 import { parsePixCode } from '../src/lib/pix';
 
 const body = defineType({
@@ -289,16 +289,16 @@ const institucional = defineType({
     }),
     defineField({
       name: 'affiliationCheckoutUrl',
-      title: 'Checkout de filiação na Cakto',
+      title: 'Link de filiação no Asaas',
       type: 'url',
       group: 'afiliacao',
       description:
-        'Use o checkout da conta institucional, nunca o da conta pessoal de teste.',
+        'Cole o link de pagamento da conta Asaas da Federação.',
       validation: (Rule) =>
         Rule.uri({ scheme: ['https'] }).custom((value) =>
-          !value || hostedCaktoCheckout(value)
+          !value || hostedAsaasLink(value)
             ? true
-            : 'Use um checkout HTTPS em pay.cakto.com.br.',
+            : 'Use um link HTTPS hospedado pelo Asaas.',
         ),
     }),
     defineField({
