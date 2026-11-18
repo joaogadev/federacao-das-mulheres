@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { AsaasClient, type AsaasCustomer, type AsaasPayment, type AsaasSubscription } from './asaas.client';
 import { Database } from './prisma.service';
 import { config } from './config';
-import { newerPaymentStatus } from './payment-state';
+import { isApprovedPayment, newerPaymentStatus } from './payment-state';
 
 const eventSchema = z.object({id:z.string().min(3).max(200),event:z.string().min(3).max(100),payment:z.object({id:z.string().min(1)}).passthrough().optional(),subscription:z.object({id:z.string().min(1)}).passthrough().optional()}).passthrough();
 const paymentTypes = new Set(['PAYMENT_CREATED','PAYMENT_UPDATED','PAYMENT_CONFIRMED','PAYMENT_RECEIVED','PAYMENT_OVERDUE','PAYMENT_DELETED','PAYMENT_REFUNDED','PAYMENT_PARTIALLY_REFUNDED','PAYMENT_REFUND_IN_PROGRESS','PAYMENT_CHARGEBACK_REQUESTED']);
@@ -92,15 +92,39 @@ export class AsaasService implements OnModuleInit {
     if (!origin && knownSubscription) origin=knownSubscription.origin;
     if (!origin && p.paymentLink) origin=await this.db.resourceOrigin.findUnique({where:{asaasLinkId:p.paymentLink}});
     if (!origin || !origin.enabled || (origin.kind==='DONATION' && p.subscription)) return false;
+    if (origin.kind==='AFFILIATION' && !knownSubscription && !isApprovedPayment(p.status)) {
+      if (eventId) await this.db.inboxEvent.update({where:{id:eventId},data:{state:'PROCESSED',processedAt:new Date(),lastError:null,lockedUntil:null}});
+      return true;
+    }
     const customer=await this.db.customerIdentity.findUnique({where:{asaasId:p.customer}});
-    const details=customer ? null : config.ASAAS_API_KEY ? await this.api.customer(p.customer) : {id:p.customer,name:'Pessoa de fixture local'} as AsaasCustomer;
+    const details=!customer || origin.kind==='AFFILIATION' ? config.ASAAS_API_KEY ? await this.api.customer(p.customer) : {id:p.customer,name:'Pessoa de fixture local'} as AsaasCustomer : null;
     const subscription=p.subscription && origin.kind==='AFFILIATION' && !knownSubscription ? config.ASAAS_API_KEY ? await this.api.subscription(p.subscription) : {id:p.subscription,customer:p.customer,value:p.value,cycle:'MONTHLY',status:'ACTIVE'} as AsaasSubscription : null;
     for(let attempt=0;attempt<3;attempt++) try {
       await this.db.$transaction(async tx=>{
         let identity=await tx.customerIdentity.findUnique({where:{asaasId:p.customer}});
         if (!identity) {
-          const person=await tx.person.create({data:{name:details?.name || 'Nome indisponível',document:digits(details?.cpfCnpj),email:details?.email?.trim().toLowerCase()||null,phone:digits(details?.mobilePhone||details?.phone),customers:{create:{asaasId:p.customer}}},include:{customers:true}});
-          identity=person.customers[0];
+          const cpf=origin!.kind==='AFFILIATION' ? digits(details?.cpfCnpj) : null;
+          const matches=cpf ? await tx.person.findMany({where:{document:cpf},take:2}) : [];
+          if (matches.length>1) throw new Error('CPF duplicado; vínculo Asaas exige revisão manual');
+          if (matches.length===1) {
+            const person=matches[0];
+            await tx.person.update({where:{id:person.id},data:{
+              email:person.email || details?.email?.trim().toLowerCase() || null,
+              phone:person.phone || digits(details?.mobilePhone || details?.phone),
+            }});
+            identity=await tx.customerIdentity.create({data:{asaasId:p.customer,personId:person.id}});
+          } else {
+            const person=await tx.person.create({data:{name:details?.name || 'Nome indisponível',document:digits(details?.cpfCnpj),email:details?.email?.trim().toLowerCase()||null,phone:digits(details?.mobilePhone||details?.phone),customers:{create:{asaasId:p.customer}}},include:{customers:true}});
+            identity=person.customers[0];
+          }
+        } else if (origin!.kind==='AFFILIATION' && details) {
+          const person=await tx.person.findUniqueOrThrow({where:{id:identity.personId}});
+          await tx.person.update({where:{id:person.id},data:{
+            name:person.name==='Nome indisponível' ? details.name || person.name : person.name,
+            email:person.email || details.email?.trim().toLowerCase() || null,
+            phone:person.phone || digits(details.mobilePhone || details.phone),
+            document:person.document || digits(details.cpfCnpj),
+          }});
         }
         let subscriptionId:string|undefined=knownSubscription?.id;
         let donationId:string|undefined=knownPayment?.donationId || undefined;
@@ -109,7 +133,10 @@ export class AsaasService implements OnModuleInit {
           const existing=await tx.subscription.findUnique({where:{asaasId:p.subscription}});
           if (existing) subscriptionId=existing.id;
           else {
-            const membership=await tx.membership.create({data:{personId:identity.personId}});
+            const manual=await tx.membership.findFirst({where:{personId:identity.personId,source:'MANUAL',status:{not:'REPROVADA'}}});
+            const membership=manual
+              ? await tx.membership.update({where:{id:manual.id},data:{source:'MISTA'}})
+              : await tx.membership.create({data:{personId:identity.personId,source:'ASAAS'}});
             const created=await tx.subscription.create({data:{membershipId:membership.id,originId:origin!.id,asaasId:p.subscription,amountCents:money(subscription?.value)??money(p.value)!,cycle:subscription?.cycle||'MONTHLY',nextDueDate:date(subscription?.nextDueDate),status:subscription?.status||'ACTIVE'}});
             subscriptionId=created.id;
           }

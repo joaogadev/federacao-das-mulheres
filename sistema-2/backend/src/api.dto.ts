@@ -50,10 +50,12 @@ export class SubscriptionDto {
 export class MembershipDto {
   @ApiProperty({format:'uuid'}) id!:string;
   @ApiProperty({enum:['PENDENTE','APROVADA','REPROVADA']}) status!:string;
+  @ApiProperty({enum:['ASAAS','MANUAL','MISTA']}) source!:string;
   @ApiProperty({format:'date-time'}) createdAt!:string;
   @ApiPropertyOptional({nullable:true,format:'date-time'}) decidedAt?:string|null;
   @ApiProperty({type:PersonDto}) person!:PersonDto;
   @ApiProperty({type:[SubscriptionDto]}) subscriptions!:SubscriptionDto[];
+  @ApiProperty({type:'array',items:{type:'object'}}) manualMonths!:object[];
   @ApiPropertyOptional({type:'array',items:{type:'object'}}) history?:object[];
 }
 export class MembershipPageDto {

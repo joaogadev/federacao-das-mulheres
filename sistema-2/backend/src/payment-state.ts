@@ -9,3 +9,8 @@ export function newerPaymentStatus(previous:string|undefined,next:string):string
   const before=priority[previous],after=priority[next];
   return before!==undefined && after!==undefined && after<before ? previous : next;
 }
+
+/** A new affiliation is visible only after Asaas confirms the first charge. */
+export function isApprovedPayment(status:string):boolean {
+  return status === 'CONFIRMED' || status === 'RECEIVED';
+}

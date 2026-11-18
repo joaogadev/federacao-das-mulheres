@@ -254,11 +254,30 @@ function Members({ user }: { user: User }) {
     [filter, setFilter] = useState(''),
     [financial, setFinancial] = useState(''),
     [query, setQuery] = useState(''),
-    [selected, setSelected] = useState('');
+    [selected, setSelected] = useState(''),
+    [manualName, setManualName] = useState(''),
+    [manualCpf, setManualCpf] = useState(''),
+    [manualPhone, setManualPhone] = useState(''),
+    [manualError, setManualError] = useState('');
   const path = `/memberships?page=${page}&search=${encodeURIComponent(query)}${filter ? `&status=${filter}` : ''}${financial ? `&financial=${financial}` : ''}`;
   const { data, error, loading, reload } = useLoad<Page<Membership>>(path);
+  async function registerManual(e: React.FormEvent) {
+    e.preventDefault(); setManualError('');
+    try {
+      await api('/memberships/manual','POST',{name:manualName,cpf:manualCpf,phone:manualPhone});
+      setManualName(''); setManualCpf(''); setManualPhone(''); reload();
+    } catch (cause) { setManualError((cause as Error).message); }
+  }
   return (
     <>
+      {user.role === 'ADMIN' && <form className="filters" onSubmit={registerManual}>
+        <h2>Cadastrar afiliada anterior ao Asaas</h2>
+        <label>Nome<input required value={manualName} onChange={e=>setManualName(e.target.value)} /></label>
+        <label>CPF<input required inputMode="numeric" value={manualCpf} onChange={e=>setManualCpf(e.target.value)} /></label>
+        <label>Telefone<input required inputMode="tel" value={manualPhone} onChange={e=>setManualPhone(e.target.value)} /></label>
+        <button>Cadastrar</button>
+        {manualError && <p className="error" role="alert">{manualError}</p>}
+      </form>}
       <form
         className="filters"
         onSubmit={(e) => {
@@ -268,7 +287,7 @@ function Members({ user }: { user: User }) {
         }}
       >
         <label>
-          Buscar nome ou e-mail
+          Buscar nome, e-mail ou CPF
           <input value={search} onChange={(e) => setSearch(e.target.value)} />
         </label>
         <label>
@@ -325,7 +344,7 @@ function Members({ user }: { user: User }) {
                       <td>{m.person.name}</td>
                       <td>{m.status}</td>
                       <td>
-                        {m.subscriptions
+                        {m.manualMonths?.some(p=>p.paid) ? 'Recebida' : m.manualMonths?.some(p=>!p.paid) ? 'Vencida' : m.subscriptions
                           .flatMap((s) => s.payments)
                           .some((p) => p.status === 'OVERDUE')
                           ? 'Vencida'
@@ -409,6 +428,7 @@ function MemberDetail({
             {data.person.email || 'Sem e-mail'} ·{' '}
             {data.person.phone || 'Sem telefone'}
           </p>
+          <p>Origem: <strong>{data.source}</strong></p>
           <p>
             Decisão institucional: <strong>{data.status}</strong>
           </p>
@@ -460,6 +480,7 @@ function MemberDetail({
               </ul>
             </article>
           ))}
+          {['MANUAL','MISTA'].includes(data.source) && <ManualMonths id={id} months={data.manualMonths || []} editable={user.role==='ADMIN'} onSaved={reload} />}
           <h3>Histórico institucional</h3>
           {data.history?.length ? (
             <ul>
@@ -476,6 +497,31 @@ function MemberDetail({
       )}
     </section>
   );
+}
+function ManualMonths({id,months,editable,onSaved}:{id:string;months:Membership['manualMonths'];editable:boolean;onSaved:()=>void}) {
+  const [competence,setCompetence]=useState(new Date().toISOString().slice(0,7));
+  const [paid,setPaid]=useState(false);
+  const [amount,setAmount]=useState('30');
+  const [paidAt,setPaidAt]=useState(new Date().toISOString().slice(0,10));
+  const [note,setNote]=useState('');
+  const [error,setError]=useState('');
+  async function save(e:React.FormEvent) {
+    e.preventDefault();setError('');
+    try {
+      await api(`/memberships/${id}/manual-month`,'POST',{competence,paid,amountCents:paid?Math.round(Number(amount.replace(',','.'))*100):null,paidAt:paid?paidAt:null,note});
+      onSaved();
+    } catch(cause) {setError((cause as Error).message);}
+  }
+  return <section><h3>Mensalidades conferidas pela Federação</h3>
+    {editable && <form className="filters" onSubmit={save}>
+      <label>Mês<input type="month" required value={competence} onChange={e=>setCompetence(e.target.value)} /></label>
+      <label>Situação<select value={paid?'paid':'unpaid'} onChange={e=>setPaid(e.target.value==='paid')}><option value="unpaid">Não confirmado</option><option value="paid">Pagamento conferido</option></select></label>
+      {paid && <><label>Valor (R$)<input inputMode="decimal" required value={amount} onChange={e=>setAmount(e.target.value)} /></label><label>Data do pagamento<input type="date" required value={paidAt} onChange={e=>setPaidAt(e.target.value)} /></label></>}
+      <label>Observação<input value={note} onChange={e=>setNote(e.target.value)} /></label><button>Salvar conferência</button>
+      {error && <p className="error" role="alert">{error}</p>}
+    </form>}
+    {months.length ? <ul>{months.map(m=><li key={m.id}>{m.competence} · {m.paid?'Pagamento conferido':'Não confirmado'}{m.paid && m.amountCents!=null?` · ${money(m.amountCents)}`:''} · {m.verifiedBy?.email || 'Responsável registrada'} · {date(m.verifiedAt)}</li>)}</ul> : <p>Nenhum mês conferido.</p>}
+  </section>;
 }
 function Donations() {
   const [page, setPage] = useState(1),

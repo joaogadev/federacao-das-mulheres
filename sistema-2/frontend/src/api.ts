@@ -5,7 +5,9 @@ export type Person = {
   name: string;
   email: string | null;
   phone: string | null;
+  document?: string | null;
 };
+export type ManualMonth = { id:string; competence:string; paid:boolean; amountCents:number|null; paidAt:string|null; note:string|null; verifiedAt:string; verifiedBy?:{email:string} };
 export type Payment = {
   id: string;
   status: string;
@@ -24,9 +26,11 @@ export type Subscription = {
 export type Membership = {
   id: string;
   status: string;
+  source: 'ASAAS' | 'MANUAL' | 'MISTA';
   createdAt: string;
   person: Person;
   subscriptions: Subscription[];
+  manualMonths: ManualMonth[];
   history?: {
     id: string;
     action: string;
