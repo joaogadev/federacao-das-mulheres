@@ -22,7 +22,7 @@ O Studio não expõe tokens. Os campos institucionais são agrupados e há uma e
 
 O workflow `.github/workflows/deploy.yml` executa nesta ordem: consulta publicada ao Sanity e validação do contrato (`npm run test:integration:cms`), build de produção (`npm run build`) e deploy do Worker somente em push para `main`. Falha ou indisponibilidade do Sanity interrompe o workflow antes do build; falha de build impede o deploy. Pull requests e pushes em branches `features/**` validam integração e build, sem publicar o Worker de produção.
 
-Configure as variáveis de repositório `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`, `PUBLIC_SANITY_STUDIO_URL`, `PUBLIC_ASAAS_AFFILIATION_URL`, `PUBLIC_ASAAS_DONATION_URL`, `PUBLIC_PRIVACY_URL`, `PUBLIC_AFFILIATION_TERMS_URL` e `CLOUDFLARE_ACCOUNT_ID`. Cadastre `CLOUDFLARE_API_TOKEN` como secret com escopo mínimo para publicar esse Worker. Sem essas variáveis/secrets, os jobs falham fechados.
+Configure `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`, `PUBLIC_SANITY_STUDIO_URL`, `PUBLIC_ASAAS_AFFILIATION_URL`, `PUBLIC_ASAAS_DONATION_URL`, `PUBLIC_PRIVACY_URL`, `PUBLIC_AFFILIATION_TERMS_URL` e `CLOUDFLARE_ACCOUNT_ID` em Actions Variables ou Actions Secrets. O workflow aceita ambos, com preferência para Variables. Cadastre `CLOUDFLARE_API_TOKEN` como secret com escopo mínimo para publicar esse Worker. Sem esses valores, os jobs falham fechados.
 
 Para que não exista um caminho paralelo que ignore os testes, desative os deploys automáticos do Workers Builds conectado ao Git ou desconecte a integração Git do Worker. Mantenha o workflow do GitHub como único caminho de publicação. Um build nativo independente do Cloudflare pode continuar executando mesmo após falha de CI e não é bloqueado por este workflow.
 
