@@ -266,17 +266,12 @@ const institucional = defineType({
     institutionalUrl('facebook', 'Link do Facebook'),
     defineField({
       name: 'donationUrl',
-      title: 'Link de doação no Asaas',
+      title: 'Link antigo de doação',
       type: 'url',
       group: 'doacao',
+      hidden: true,
       description:
-        'Cole o link público de pagamento do Asaas, Sandbox ou produção.',
-      validation: (Rule) =>
-        Rule.uri({ scheme: ['https'] }).custom((value) =>
-          !value || hostedAsaasLink(value)
-            ? true
-            : 'Use um link HTTPS hospedado pelo Asaas.',
-        ),
+        'Campo legado preservado no documento; a página de doações usa o código Pix copia e cola.',
     }),
     defineField({
       name: 'privacyUrl',
@@ -363,7 +358,7 @@ const institucional = defineType({
       group: 'doacao',
       rows: 5,
       description:
-        'O QR Code é gerado automaticamente deste código. Confira recebedora e valor antes de publicar.',
+        'Este código aparece na página de doações. Confira recebedora e valor antes de publicar.',
       validation: (Rule) =>
         Rule.custom((value) =>
           !value || parsePixCode(value)
