@@ -45,17 +45,34 @@ export function validCaktoSignature(raw: Buffer | undefined, timestamp: string |
 @Injectable()
 export class CaktoService implements OnModuleInit, OnModuleDestroy {
   private timer?: NodeJS.Timeout;
+  private startupTimer?: NodeJS.Timeout;
   constructor(private readonly db: Database, private readonly api: CaktoClient) {}
 
   onModuleInit() {
-    if (!config.CAKTO_CLIENT_ID || !config.CAKTO_CLIENT_SECRET || !config.CAKTO_PRODUCT_ID) return;
-    this.timer = setInterval(() => void this.reconcile().catch(() => {
-      console.error('Conciliação Cakto falhou; consulte a última execução no painel.');
-    }), config.CAKTO_RECONCILE_INTERVAL_MINUTES * 60_000);
+    if (!config.CAKTO_CLIENT_ID || !config.CAKTO_CLIENT_SECRET || !config.CAKTO_PRODUCT_ID) {
+      console.warn('CAKTO_RECONCILE_DISABLED missing_configuration');
+      return;
+    }
+    this.startupTimer = setTimeout(() => void this.runScheduled(), 5_000);
+    this.startupTimer.unref();
+    this.timer = setInterval(() => void this.runScheduled(), config.CAKTO_RECONCILE_INTERVAL_MINUTES * 60_000);
     this.timer.unref();
   }
 
-  onModuleDestroy() { if (this.timer) clearInterval(this.timer); }
+  onModuleDestroy() {
+    if (this.startupTimer) clearTimeout(this.startupTimer);
+    if (this.timer) clearInterval(this.timer);
+  }
+
+  private async runScheduled() {
+    try {
+      const result = await this.reconcile();
+      console.info(`CAKTO_RECONCILE_COMPLETED seen=${result.seen} processed=${result.processed} skipped=${result.skipped} failed=${result.failed}`);
+    } catch (error) {
+      const status = error instanceof ServiceUnavailableException ? error.getStatus() : 'unknown';
+      console.error(`CAKTO_RECONCILE_FAILED status=${status}; consulte a execução no painel`);
+    }
+  }
 
   async receive(raw: Buffer | undefined, timestamp: string | undefined, signature: string | undefined, body: unknown) {
     if (!validCaktoSignature(raw, timestamp, signature, config.CAKTO_WEBHOOK_SECRET)) throw new UnauthorizedException('Assinatura Cakto inválida');
