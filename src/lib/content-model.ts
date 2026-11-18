@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { hostedCaktoCheckout } from './cakto-link';
+import { hostedAsaasLink } from './asaas-links';
 import { parsePixCode } from './pix';
 
 const text = z.string().trim().min(1);
@@ -93,8 +93,8 @@ export const siteSchema = z.object({
   affiliationCheckoutUrl: z
     .string()
     .refine(
-      (value) => Boolean(hostedCaktoCheckout(value)),
-      'Use um checkout HTTPS da Cakto',
+      (value) => Boolean(hostedAsaasLink(value)),
+      'Use um link HTTPS do Asaas',
     )
     .nullish(),
   affiliationMonthlyAmount: z.number().positive().nullish(),
