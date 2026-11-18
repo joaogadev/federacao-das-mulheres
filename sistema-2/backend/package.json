@@ -9,6 +9,7 @@
     "check": "tsc --noEmit",
     "lint": "eslint src scripts --ext .ts",
     "test": "tsx --test tests/*.test.mjs",
+    "test:hotmart-connection": "node scripts/test-hotmart-connection.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",

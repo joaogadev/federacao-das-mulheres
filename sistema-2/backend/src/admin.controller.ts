@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Database } from './prisma.service';
 import { AuthService } from './auth';
 import { AsaasService } from './asaas.service';
+import { HotmartService } from './hotmart.service';
 import { DecisionDto, DonationPageDto, InboxEventDto, MembershipDto, MembershipPageDto, SummaryDto } from './api.dto';
 
 const pageSchema=z.object({page:z.coerce.number().int().min(1).default(1),limit:z.coerce.number().int().min(1).max(100).default(20),search:z.string().max(100).optional(),status:z.enum(['PENDENTE','APROVADA','REPROVADA']).optional(),financial:z.enum(['overdue','received','pending','refunded']).optional()});
@@ -14,7 +15,7 @@ const uuid=z.string().uuid();
 @ApiTags('admin')
 @Controller()
 export class AdminController {
-  constructor(private readonly db:Database,private readonly auth:AuthService,private readonly asaas:AsaasService) {}
+  constructor(private readonly db:Database,private readonly auth:AuthService,private readonly asaas:AsaasService,private readonly hotmart:HotmartService) {}
 
   @Get('health/live') @ApiOperation({summary:'Processo ativo'})
   live() {return {status:'ok'};}
@@ -43,6 +44,18 @@ export class AdminController {
     if(!item) throw new BadRequestException('Filiação não encontrada');
     const history=await this.db.auditLog.findMany({where:{entityType:'Membership',entityId:id},select:{id:true,action:true,details:true,createdAt:true,actor:{select:{email:true}}},orderBy:{createdAt:'desc'}});
     return {...item,history};
+  }
+
+  @Post('memberships/:id/hotmart-checkout') @ApiOperation({summary:'Gera URL Hotmart com vínculo assinado; exige ADMIN e CSRF'})
+  @ApiCookieAuth() @ApiHeader({name:'X-CSRF-Token'})
+  async hotmartCheckout(@Req() req:Request,@Param('id') id:string) {
+    const session=await this.auth.require(req,'ADMIN',true);
+    if(!uuid.safeParse(id).success) throw new BadRequestException('ID inválido');
+    const membership=await this.db.membership.findUnique({where:{id},select:{id:true}});
+    if(!membership) throw new BadRequestException('Filiação não encontrada');
+    const result=this.hotmart.checkoutUrl(membership.id);
+    await this.db.auditLog.create({data:{actorId:session.userId,action:'HOTMART_CHECKOUT_ISSUED',entityType:'Membership',entityId:membership.id}});
+    return result;
   }
 
   @Post('memberships/:id/decision') @ApiOperation({summary:'Decisão institucional; exige ADMIN e CSRF'})

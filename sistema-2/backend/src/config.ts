@@ -16,6 +16,11 @@ const schema = z
     ASAAS_AFFILIATION_LINK_ID: z.string().default(''),
     ASAAS_DONATION_LINK_ID: z.string().default(''),
     RECONCILE_INTERVAL_MINUTES: z.coerce.number().int().min(15).default(60),
+    HOTMART_MEMBERSHIP_APPROVED: z.enum(['true','false']).default('false'),
+    HOTMART_WEBHOOK_TOKEN: z.string().default(''),
+    HOTMART_CHECKOUT_URL: z.string().default(''),
+    HOTMART_PRODUCT_ID: z.string().default(''),
+    HOTMART_LINK_SECRET: z.string().default(''),
   })
   .superRefine((v, ctx) => {
     if (
@@ -36,10 +41,12 @@ const schema = z
           'FRONTEND_ORIGIN must be an origin without path or trailing slash',
       });
     if (v.NODE_ENV === 'production') {
-      if (!v.ASAAS_API_KEY || v.ASAAS_WEBHOOK_TOKEN.length < 32)
+      const asaasReady=Boolean(v.ASAAS_API_KEY && v.ASAAS_WEBHOOK_TOKEN.length>=32);
+      const hotmartReady=v.HOTMART_MEMBERSHIP_APPROVED==='true' && Boolean(v.HOTMART_WEBHOOK_TOKEN && v.HOTMART_CHECKOUT_URL && v.HOTMART_PRODUCT_ID && v.HOTMART_LINK_SECRET.length>=32);
+      if (!asaasReady && !hotmartReady)
         ctx.addIssue({
           code: 'custom',
-          message: 'Asaas credentials required in production',
+          message: 'Configure uma integração de pagamentos habilitada em produção',
         });
       if (v.COOKIE_SECURE !== 'true')
         ctx.addIssue({
@@ -65,6 +72,19 @@ const schema = z
         code: 'custom',
         message: 'Asaas link IDs must be distinct',
       });
+    if (v.HOTMART_WEBHOOK_TOKEN && (v.HOTMART_WEBHOOK_TOKEN.length < 32 || v.HOTMART_WEBHOOK_TOKEN.length > 255 || /\s/.test(v.HOTMART_WEBHOOK_TOKEN)))
+      ctx.addIssue({code:'custom',message:'HOTMART_WEBHOOK_TOKEN must have 32–255 non-space characters'});
+    if (v.HOTMART_MEMBERSHIP_APPROVED === 'true' && (!v.HOTMART_WEBHOOK_TOKEN || !v.HOTMART_CHECKOUT_URL || !v.HOTMART_PRODUCT_ID || v.HOTMART_LINK_SECRET.length < 32))
+      ctx.addIssue({code:'custom',message:'Hotmart membership approval requires product, checkout, webhook token, and link secret'});
+    if (v.HOTMART_CHECKOUT_URL) {
+      try {
+        const checkout = new URL(v.HOTMART_CHECKOUT_URL);
+        if (checkout.protocol !== 'https:' || !['pay.hotmart.com','checkout.hotmart.com'].includes(checkout.hostname) || checkout.username || checkout.password)
+          throw new Error();
+      } catch {
+        ctx.addIssue({code:'custom',message:'HOTMART_CHECKOUT_URL must be an official HTTPS Hotmart checkout URL'});
+      }
+    }
   });
 
 export const config = schema.parse(process.env);

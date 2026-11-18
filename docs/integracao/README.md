@@ -12,6 +12,7 @@ Comece por [visão geral](01-visao-geral.md), depois [execução local](02-execu
 | [06 — teste ponta a ponta](06-teste-ponta-a-ponta.md)  | Roteiro e matriz de homologação                       |
 | [07 — operação](07-operacao-e-problemas.md)            | Incidentes, reprocessamento e responsabilidades       |
 | [08 — documentos](08-documentos.md)                     | Digitalização local, OCR opcional e exportação         |
+| [09 — Hotmart](09-hotmart.md)                            | Pagamentos de filiação, eventos e pendências comerciais |
 
 O código entregue cria uma implementação própria do Sistema 2 para uso e referência. O trabalho futuro de outro integrante não foi incorporado. Nenhuma cobrança real, transferência, publicação ou ativação de produção integra esta entrega.
 

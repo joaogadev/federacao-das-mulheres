@@ -383,6 +383,7 @@ function MemberDetail({
   );
   const [reason, setReason] = useState(''),
     [actionError, setActionError] = useState(''),
+    [checkoutUrl, setCheckoutUrl] = useState(''),
     [busy, setBusy] = useState(false);
   async function decide(status: 'APROVADA' | 'REPROVADA') {
     setBusy(true);
@@ -396,6 +397,14 @@ function MemberDetail({
     } finally {
       setBusy(false);
     }
+  }
+  async function createHotmartCheckout() {
+    setBusy(true); setActionError(''); setCheckoutUrl('');
+    try {
+      const result=await api<{url:string}>(`/memberships/${id}/hotmart-checkout`,'POST');
+      setCheckoutUrl(result.url);
+    } catch(e) { setActionError((e as Error).message); }
+    finally { setBusy(false); }
   }
   return (
     <section className="detail">
@@ -414,6 +423,10 @@ function MemberDetail({
           </p>
           {user.role === 'ADMIN' && (
             <div className="decision">
+              <button disabled={busy} onClick={createHotmartCheckout}>
+                Gerar checkout Hotmart
+              </button>
+              {checkoutUrl && <p><a href={checkoutUrl} target="_blank" rel="noreferrer">Abrir checkout Hotmart</a></p>}
               <label>
                 Motivo da decisão
                 <textarea
@@ -454,7 +467,7 @@ function MemberDetail({
                 {s.payments.map((p) => (
                   <li key={p.id}>
                     Vencimento {date(p.dueDate)} · {money(p.amountCents)} ·{' '}
-                    {p.status}
+                    {p.status}{p.provider==='HOTMART'&&p.hotmartTransactionId?` · Hotmart ${p.hotmartTransactionId}`:''}
                   </li>
                 ))}
               </ul>

@@ -52,7 +52,7 @@ export class AsaasService implements OnModuleInit {
     if (this.busy) return;
     this.busy=true;
     try {
-      const items=await this.db.inboxEvent.findMany({where:{OR:[{state:'PENDING',nextAttemptAt:{lte:new Date()}},{state:'PROCESSING',lockedUntil:{lt:new Date()}}]},orderBy:{receivedAt:'asc'},take:10});
+      const items=await this.db.inboxEvent.findMany({where:{type:{in:[...paymentTypes,...subscriptionTypes]},OR:[{state:'PENDING',nextAttemptAt:{lte:new Date()}},{state:'PROCESSING',lockedUntil:{lt:new Date()}}]},orderBy:{receivedAt:'asc'},take:10});
       for (const event of items) {
         const claimed=await this.db.inboxEvent.updateMany({where:{id:event.id,OR:[{state:'PENDING',nextAttemptAt:{lte:new Date()}},{state:'PROCESSING',lockedUntil:{lt:new Date()}}]},data:{state:'PROCESSING',lockedUntil:new Date(Date.now()+60000),attempts:{increment:1}}});
         if (!claimed.count) continue;
@@ -146,13 +146,14 @@ export class AsaasService implements OnModuleInit {
           if (await this.syncPayment(p)) seen.add(p.id);
         }
       }
-      const subscriptions=await this.db.subscription.findMany({select:{asaasId:true}});
+      const subscriptions=await this.db.subscription.findMany({where:{asaasId:{not:null}},select:{asaasId:true}});
       for (const subscription of subscriptions) {
+        if (!subscription.asaasId) continue;
         for await (const p of this.api.pages<AsaasPayment>(`/payments?subscription=${encodeURIComponent(subscription.asaasId)}`)) {
           if (await this.syncPayment(p)) seen.add(p.id);
         }
       }
-      const unresolved=await this.db.inboxEvent.findMany({where:{state:'UNRESOLVED'},take:100});
+      const unresolved=await this.db.inboxEvent.findMany({where:{state:'UNRESOLVED',type:{in:[...paymentTypes,...subscriptionTypes]}},take:100});
       await this.db.inboxEvent.updateMany({where:{id:{in:unresolved.map(x=>x.id)}},data:{state:'PENDING',nextAttemptAt:new Date()}});
       await this.db.syncRun.update({where:{id:run.id},data:{finishedAt:new Date(),result:`${seen.size} pagamentos vinculados`}});
       return {count:seen.size};

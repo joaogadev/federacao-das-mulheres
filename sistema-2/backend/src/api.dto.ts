@@ -27,6 +27,8 @@ export class PersonDto {
 export class PaymentDto {
   @ApiProperty({format:'uuid'}) id!:string;
   @ApiPropertyOptional() asaasId?:string;
+  @ApiPropertyOptional({enum:['ASAAS','HOTMART']}) provider?:string;
+  @ApiPropertyOptional() hotmartTransactionId?:string;
   @ApiPropertyOptional() customerId?:string;
   @ApiPropertyOptional({format:'uuid',nullable:true}) subscriptionId?:string|null;
   @ApiPropertyOptional({format:'uuid',nullable:true}) donationId?:string|null;
@@ -41,6 +43,7 @@ export class PaymentDto {
 export class SubscriptionDto {
   @ApiProperty({format:'uuid'}) id!:string;
   @ApiPropertyOptional() asaasId?:string;
+  @ApiPropertyOptional() hotmartSubscriberCode?:string;
   @ApiProperty() status!:string;
   @ApiProperty() cycle!:string;
   @ApiProperty({type:'integer'}) amountCents!:number;

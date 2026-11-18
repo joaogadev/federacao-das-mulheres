@@ -8,6 +8,9 @@ export type Person = {
 };
 export type Payment = {
   id: string;
+  provider?: 'ASAAS' | 'HOTMART';
+  asaasId?: string | null;
+  hotmartTransactionId?: string | null;
   status: string;
   dueDate: string | null;
   amountCents: number;

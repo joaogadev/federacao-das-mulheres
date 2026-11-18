@@ -37,6 +37,11 @@ enum DocumentStatus {
   DIVERGENTE
 }
 
+enum PaymentProvider {
+  ASAAS
+  HOTMART
+}
+
 model AdminUser {
   id                String            @id @default(uuid()) @db.Uuid
   email             String            @unique
@@ -131,13 +136,14 @@ model Person {
 model CustomerIdentity {
   id       String @id @default(uuid()) @db.Uuid
   personId String @db.Uuid
-  asaasId  String @unique
+  asaasId  String? @unique
   person   Person @relation(fields: [personId], references: [id])
 }
 
 model ResourceOrigin {
   id            String         @id @default(uuid()) @db.Uuid
-  asaasLinkId   String         @unique
+  asaasLinkId   String?        @unique
+  hotmartProductId String?     @unique
   kind          OriginKind
   enabled       Boolean        @default(true)
   createdAt     DateTime       @default(now()) @db.Timestamptz(3)
@@ -161,7 +167,9 @@ model Subscription {
   id           String         @id @default(uuid()) @db.Uuid
   membershipId String         @db.Uuid
   originId     String         @db.Uuid
-  asaasId      String         @unique
+  asaasId      String?        @unique
+  hotmartSubscriberCode String? @unique
+  hotmartSubscriptionId String? @unique
   amountCents  Int
   cycle        String
   nextDueDate  DateTime?      @db.Timestamptz(3)
@@ -174,7 +182,10 @@ model Subscription {
 
 model Payment {
   id             String        @id @default(uuid()) @db.Uuid
-  asaasId        String        @unique
+  provider       PaymentProvider @default(ASAAS)
+  asaasId        String?       @unique
+  hotmartTransactionId String? @unique
+  currency       String        @default("BRL")
   customerId     String
   subscriptionId String?       @db.Uuid
   donationId     String?       @unique @db.Uuid
