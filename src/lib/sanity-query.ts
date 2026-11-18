@@ -7,7 +7,7 @@ const article = `_id, title, "slug": slug.current, description, body,
 export const contentQuery = `{
   "site": *[_type == "institucional" && _id == "institucional" && ${published}][0]{
     _id, name, tagline, intro, homeMessage, history, mission, vision, values,
-    email, phone, address, instagram, facebook, donationUrl
+    email, phone, address, instagram, facebook, donationUrl, affiliationCheckoutUrl
   },
   "noticias": *[_type == "noticia" && ${published}] | order(date desc, _id asc){${article}, date},
   "eventos": *[_type == "evento" && ${published}] | order(date asc, _id asc){${article}, date, time, location},
