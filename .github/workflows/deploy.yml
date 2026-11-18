@@ -1,0 +1,78 @@
+name: Validate and deploy site
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'features/**'
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: External integration checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: npm
+      - run: npm ci
+      - name: Check published Sanity content and contract
+        run: npm run test:integration:cms
+        env:
+          SANITY_PROJECT_ID: ${{ vars.SANITY_PROJECT_ID }}
+          SANITY_DATASET: ${{ vars.SANITY_DATASET }}
+
+  build:
+    name: Production build
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          SANITY_PROJECT_ID: ${{ vars.SANITY_PROJECT_ID }}
+          SANITY_DATASET: ${{ vars.SANITY_DATASET }}
+          PUBLIC_SANITY_STUDIO_URL: ${{ vars.PUBLIC_SANITY_STUDIO_URL }}
+          PUBLIC_ASAAS_AFFILIATION_URL: ${{ vars.PUBLIC_ASAAS_AFFILIATION_URL }}
+          PUBLIC_ASAAS_DONATION_URL: ${{ vars.PUBLIC_ASAAS_DONATION_URL }}
+          PUBLIC_PRIVACY_URL: ${{ vars.PUBLIC_PRIVACY_URL }}
+          PUBLIC_AFFILIATION_TERMS_URL: ${{ vars.PUBLIC_AFFILIATION_TERMS_URL }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-dist
+          path: dist/
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy Cloudflare Worker
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: site-dist
+          path: dist/
+      - name: Deploy static assets to Workers
+        run: npx wrangler@latest deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

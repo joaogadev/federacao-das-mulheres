@@ -11,6 +11,7 @@
     "dev:demo": "node scripts/demo.mjs dev",
     "build:demo": "node scripts/demo.mjs build",
     "test": "tsx --test tests/*.test.ts",
+    "test:integration:cms": "tsx scripts/check-sanity-integration.ts",
     "migrate:prepare": "node scripts/migrate.mjs",
     "migrate:import": "node --env-file=.env scripts/migrate.mjs --import",
     "migrate:verify": "node --env-file=.env scripts/migrate.mjs --verify",
