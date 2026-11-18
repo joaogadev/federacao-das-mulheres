@@ -17,6 +17,13 @@ export function hostedAsaasLink(value: string | undefined): string | null {
   }
 }
 
+export function donationPaymentLink(
+  institutionalUrl: string | undefined,
+  buildUrl: string | undefined,
+): string | null {
+  return hostedAsaasLink(institutionalUrl) ?? hostedAsaasLink(buildUrl);
+}
+
 export function publicHttpsLink(value: string | undefined): string | null {
   if (!value) return null;
   try {
