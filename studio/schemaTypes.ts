@@ -266,12 +266,17 @@ const institucional = defineType({
     institutionalUrl('facebook', 'Link do Facebook'),
     defineField({
       name: 'donationUrl',
-      title: 'Link antigo de doações (legado)',
+      title: 'Link de doação no Asaas',
       type: 'url',
       group: 'doacao',
-      hidden: true,
       description:
-        'Campo legado preservado para manter documentos existentes sem utilizá-lo no site.',
+        'Cole o link público de pagamento do Asaas, Sandbox ou produção.',
+      validation: (Rule) =>
+        Rule.uri({ scheme: ['https'] }).custom((value) =>
+          !value || hostedAsaasLink(value)
+            ? true
+            : 'Use um link HTTPS hospedado pelo Asaas.',
+        ),
     }),
     defineField({
       name: 'privacyUrl',
