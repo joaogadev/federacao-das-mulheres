@@ -4,13 +4,10 @@ import PageHeader from '../components/PageHeader.astro';
 import { hostedAsaasLink, publicHttpsLink } from '../lib/asaas-links';
 import { getSite } from '../lib/content';
 const site = await getSite();
-const candidate =
+const link =
   hostedAsaasLink(site.affiliationCheckoutUrl ?? undefined) ??
   hostedAsaasLink(import.meta.env.PUBLIC_ASAAS_AFFILIATION_URL);
-const link =
-  candidate && new URL(candidate).hostname !== 'sandbox.asaas.com'
-    ? candidate
-    : null;
+const sandbox = link && new URL(link).hostname === 'sandbox.asaas.com';
 const privacy =
   publicHttpsLink(site.privacyUrl ?? undefined) ??
   publicHttpsLink(import.meta.env.PUBLIC_PRIVACY_URL);
@@ -78,6 +75,14 @@ const formattedAmount = amount
         regras serão apresentados no Asaas quando aprovados e configurados pela
         Federação.
       </p>
+      {
+        sandbox && (
+          <p class="unavailable" role="status">
+            Ambiente de testes do Asaas. Esta página não conclui uma filiação ou
+            pagamento real.
+          </p>
+        )
+      }
       {
         link ? (
           <a class="button" href={link} rel="noopener noreferrer">
