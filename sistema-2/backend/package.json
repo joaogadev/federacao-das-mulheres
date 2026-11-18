@@ -2,20 +2,24 @@
   "name": "federacao-administrativo-api",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": ">=22.14 <23"
+  },
   "scripts": {
-    "dev": "node --env-file=.env --require ts-node/register --watch src/main.ts",
+    "dev": "node --env-file-if-exists=.env scripts/with-database-url.mjs node --require ts-node/register --watch src/main.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node --env-file=.env dist/main.js",
+    "start": "node --env-file-if-exists=.env scripts/with-database-url.mjs node dist/main.js",
     "check": "tsc --noEmit",
     "lint": "eslint src scripts --ext .ts",
     "test": "tsx --test tests/*.test.mjs",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate deploy",
-    "db:migrate:dev": "prisma migrate dev",
-    "admin:create": "node --env-file=.env --import tsx scripts/admin.ts create",
-    "admin:create-consulta": "node --env-file=.env --import tsx scripts/admin.ts create-consulta",
-    "admin:password": "node --env-file=.env --import tsx scripts/admin.ts password",
-    "openapi:export": "node --env-file=.env dist/openapi-export.js"
+    "db:generate": "node --env-file-if-exists=.env scripts/with-database-url.mjs prisma generate",
+    "db:migrate": "node --env-file-if-exists=.env scripts/with-database-url.mjs prisma migrate deploy",
+    "db:migrate:dev": "node --env-file-if-exists=.env scripts/with-database-url.mjs prisma migrate dev",
+    "admin:create": "node --env-file-if-exists=.env scripts/with-database-url.mjs node --import tsx scripts/admin.ts create",
+    "admin:create-consulta": "node --env-file-if-exists=.env scripts/with-database-url.mjs node --import tsx scripts/admin.ts create-consulta",
+    "admin:password": "node --env-file-if-exists=.env scripts/with-database-url.mjs node --import tsx scripts/admin.ts password",
+    "asaas:link:affiliation": "node --env-file=.env scripts/create-affiliation-link.mjs",
+    "openapi:export": "node --env-file-if-exists=.env scripts/with-database-url.mjs node dist/openapi-export.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

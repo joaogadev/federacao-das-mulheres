@@ -26,7 +26,7 @@ export async function bootstrap(listen = true) {
   );
   if (config.NODE_ENV !== 'production')
     SwaggerModule.setup('api-docs', app, doc);
-  if (listen) await app.listen(config.PORT);
+  if (listen) await app.listen(config.PORT, '0.0.0.0');
   return { app, doc };
 }
 if (require.main === module) void bootstrap();
