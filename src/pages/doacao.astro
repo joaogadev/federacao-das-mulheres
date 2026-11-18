@@ -1,12 +1,21 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
+import QRCode from 'qrcode';
 import { publicHttpsLink } from '../lib/asaas-links';
 import { getSite } from '../lib/content';
 import { parsePixCode } from '../lib/pix';
 
 const site = await getSite();
 const pix = parsePixCode(site.donationPixCode ?? undefined);
+const qrSvg = pix
+  ? await QRCode.toString(pix.code, {
+      type: 'svg',
+      width: 300,
+      margin: 2,
+      errorCorrectionLevel: 'M',
+    })
+  : null;
 const amount = pix?.amount
   ? new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -34,9 +43,15 @@ const privacy =
       </p>
       {site.donationInstructions && <p>{site.donationInstructions}</p>}
       {
-        pix ? (
+        pix && qrSvg ? (
           <div class="pix-copy-panel">
-            <h2>Doar com Pix copia e cola</h2>
+            <h2>Doar com Pix</h2>
+            <div
+              class="pix-qr"
+              role="img"
+              aria-label={`QR Code Pix para ${pix.recipient}, ${amount}`}
+              set:html={qrSvg}
+            />
             <p>
               <strong>Recebedora:</strong> {pix.recipient}
               <br />
@@ -81,6 +96,15 @@ const privacy =
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 700;
+  }
+  .pix-qr {
+    width: min(100%, 320px);
+    margin: 1rem auto 1.5rem;
+  }
+  .pix-qr :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
   }
   .pix-copy-panel textarea {
     display: block;
