@@ -85,7 +85,7 @@ export const siteSchema = z.object({
   address: text,
   instagram: webUrl,
   facebook: webUrl,
-  donationUrl: webUrl,
+  donationUrl: webUrl.nullish(),
   affiliationCheckoutUrl: webUrl.nullish(),
   privacyUrl: webUrl.nullish(),
   affiliationTermsUrl: webUrl.nullish(),
