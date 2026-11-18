@@ -1,13 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
-import { hostedAsaasLink, publicHttpsLink } from '../lib/asaas-links';
+import { publicHttpsLink } from '../lib/asaas-links';
 import { getSite } from '../lib/content';
+import { parsePixCode } from '../lib/pix';
+
 const site = await getSite();
-const link =
-  hostedAsaasLink(site.donationUrl ?? undefined) ??
-  hostedAsaasLink(import.meta.env.PUBLIC_ASAAS_DONATION_URL);
-const sandbox = link && new URL(link).hostname === 'sandbox.asaas.com';
+const pix = parsePixCode(site.donationPixCode ?? undefined);
+const amount = pix?.amount
+  ? new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(pix.amount)
+  : 'valor livre';
 const privacy =
   publicHttpsLink(site.privacyUrl ?? undefined) ??
   publicHttpsLink(import.meta.env.PUBLIC_PRIVACY_URL);
@@ -23,34 +28,33 @@ const privacy =
     <div class="container narrow prose">
       {site.donationDescription && <p>{site.donationDescription}</p>}
       <p>
-        A doação é avulsa e pode ser paga por Pix na página hospedada pelo
-        Asaas. Doar não cria filiação, aprovação institucional nem mensalidade.
-        Consulte o valor disponível na página de pagamento antes de confirmar.
+        A doação por Pix é avulsa e não cria filiação ou mensalidade. Confira a
+        pessoa recebedora e o valor no aplicativo do seu banco antes de
+        confirmar.
       </p>
       {site.donationInstructions && <p>{site.donationInstructions}</p>}
       {
-        sandbox && (
-          <p class="unavailable" role="status">
-            Ambiente de testes do Asaas. Esta página não conclui uma doação
-            real.
-          </p>
-        )
-      }
-      {
-        link ? (
-          <a class="button" href={link} rel="noopener noreferrer">
-            Fazer uma doação
-          </a>
-        ) : (
-          <>
-            <button class="button" type="button" disabled>
-              Fazer uma doação
-            </button>
-            <p class="unavailable" role="status">
-              A doação online está temporariamente indisponível. O link de
-              pagamento ainda não foi configurado e validado.
+        pix ? (
+          <div class="pix-copy-panel">
+            <h2>Doar com Pix copia e cola</h2>
+            <p>
+              <strong>Recebedora:</strong> {pix.recipient}
+              <br />
+              <strong>Valor:</strong> {amount}
             </p>
-          </>
+            <label for="pix-code">Código Pix copia e cola</label>
+            <textarea id="pix-code" rows="5" readonly>
+              {pix.code}
+            </textarea>
+            <button class="button" id="copy-pix" type="button">
+              Copiar código Pix
+            </button>
+            <p id="copy-status" role="status" aria-live="polite" />
+          </div>
+        ) : (
+          <p class="unavailable" role="status">
+            O código Pix de doação ainda não foi configurado e publicado.
+          </p>
         )
       }
       {
@@ -65,3 +69,42 @@ const privacy =
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .pix-copy-panel {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    border: 1px solid #d8cbd0;
+    border-radius: 0.5rem;
+  }
+  .pix-copy-panel label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+  .pix-copy-panel textarea {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    resize: vertical;
+    overflow-wrap: anywhere;
+    font: inherit;
+  }
+</style>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('#copy-pix');
+  const code = document.querySelector<HTMLTextAreaElement>('#pix-code');
+  const status = document.querySelector<HTMLElement>('#copy-status');
+  button?.addEventListener('click', async () => {
+    if (!code || !status) return;
+    try {
+      await navigator.clipboard.writeText(code.value);
+      status.textContent = 'Código Pix copiado.';
+    } catch {
+      code.select();
+      status.textContent = 'Selecione e copie o código acima.';
+    }
+  });
+</script>
