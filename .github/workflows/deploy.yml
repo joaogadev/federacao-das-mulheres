@@ -2,6 +2,7 @@ name: Validate and deploy site
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
